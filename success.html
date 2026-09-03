@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRA 24h Clock: order confirmation</title>
+<meta name="description" content="What happens next after paying for CRA 24h Clock Setup or CRA24 Watch.">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #9da7b3; --accent: #4cc38a; --warn: #e5534b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 1rem 0 .5rem; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 .75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; }
+  p, li { color: var(--text); }
+  .muted { color: var(--muted); }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+        padding: 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .k { color: var(--accent); }
+  .badge { display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+           padding: .1rem .6rem; font-size: .8rem; color: var(--muted); margin-right: .4rem; }
+  .no { color: var(--warn); font-weight: 600; }
+  .yes { color: var(--accent); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+  td, th { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  a { color: #58a6ff; }
+  .price { font-size: 2.2rem; font-weight: 700; }
+  footer { margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1rem;
+           font-size: .85rem; color: var(--muted); }
+  .box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="muted"><span class="badge">CRA 24h Clock</span><span class="badge">order confirmation</span></p>
+
+  <section id="state-generic">
+    <h1>We cannot confirm a purchase from this page alone.</h1>
+    <p>You reached this page without the reference Stripe attaches after a completed payment. If
+    you have not paid, nothing has been charged. If you just paid and see this message, your
+    payment confirmation email from Stripe is the record that matters, not this page; write to
+    <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a> with that email
+    attached and it will be sorted out.</p>
+    <p><a href="index.html">Back to CRA 24h Clock</a></p>
+  </section>
+
+  <section id="state-setup" hidden>
+    <h1>Payment received: Setup, 490 &euro;.</h1>
+    <p class="box" id="setup-ref"></p>
+
+    <h2>Next step: send us your four answers</h2>
+    <p class="box">Delivery cannot start until we have your product name, your CSAF publisher
+    name and namespace, and who in your organisation decides &quot;actively exploited&quot;. You
+    do not have to wait for our email: fill in the intake form now and delivery starts from
+    there. <strong><a href="intake.html">Open the intake form &rarr;</a></strong>
+    <br><span class="muted">The form runs entirely in your browser, sends nothing by itself,
+    and gives you the answers as text you send to us yourself.</span></p>
+
+    <h2>What you bought</h2>
+    <p>Your evidence log configured for your actual product line; a dry-run of a fictional
+    exploited-vulnerability case with your team, timed against the real 24 h / 72 h / 14 d clock;
+    your first CSAF 2.0 advisory template filled with your publisher identity and namespace; a
+    written note of who in your organisation decides &quot;actively exploited&quot;. Nothing beyond
+    those four items is included in this price.</p>
+
+    <h2>What happens next, and roughly when</h2>
+    <table>
+      <tr><th>Step</th><th>What</th></tr>
+      <tr><td>1</td><td>We email the address you used at checkout asking for four things: your
+      product name, your publisher name and namespace (for the CSAF template), who in your
+      organisation decides &quot;actively exploited&quot; (name and role), and any existing
+      vulnerability process you want the dry-run mirrored against. The
+      <a href="intake.html">intake form</a> above asks for exactly those, so if you fill it in
+      first, this email is just a receipt.</td></tr>
+      <tr><td>2</td><td>Once your answers are in, we build and send back the four deliverables
+      above as files: your evidence-chain setup with a short usage note, a written transcript of
+      the dry-run, your filled CSAF 2.0 template, and the one-page decision-maker memo.</td></tr>
+      <tr><td>3</td><td>Timing: budget about 1-1.5 hours of our work once your answers arrive,
+      based on our own delivery timing. If you are one of our first Setup customers, initial
+      delivery can take longer, up to roughly half a day, while the delivery pipeline is being
+      built for the first time.</td></tr>
+    </table>
+    <p class="muted">No meeting is required and none is scheduled. Delivery is by email, to the
+    address you used at checkout.</p>
+
+    <h2>Get the tool right now</h2>
+    <p>CRA 24h Clock itself is free, MIT-licensed, and does not wait on your Setup delivery. It
+    is already on this site, next to this page: <a href="cra-clock.mjs">cra-clock.mjs</a>,
+    <a href="csaf.mjs">csaf.mjs</a>, <a href="README.md">README.md</a>,
+    <a href="LICENSE">LICENSE</a>. Requires Node.js 18+, no install step, no account, no network
+    access.</p>
+    <pre><code><span class="k">node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z</span></code></pre>
+
+    <h2>Questions</h2>
+    <p>Write to <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a> any
+    time before or during delivery.</p>
+
+    <p><a href="index.html">Back to CRA 24h Clock</a></p>
+  </section>
+
+  <section id="state-watch" hidden>
+    <h1>Subscription active: CRA24 Watch, 99 &euro;/mo.</h1>
+    <p class="box" id="watch-ref"></p>
+
+    <h2>What you bought</h2>
+    <p>A monthly regulatory and deadline digest with sources, updated tool and CSAF template
+    files, refreshed notification draft templates, and a reminder to run the evidence-chain
+    integrity check on your own machine. <span class="no">No staffed hotline and no guaranteed
+    response time</span> are included or implied.</p>
+
+    <h2>What happens next</h2>
+    <p>Nothing further is needed from you right now. Each billing period you receive the digest
+    and the refreshed files above at the email you used at checkout.</p>
+
+    <h2>Cancelling</h2>
+    <p>Cancel any time from the link in your Stripe receipt email. Cancellation takes effect at
+    the end of the current billing period; the period already paid for is not refunded.</p>
+
+    <h2>Get the tool right now</h2>
+    <p>CRA 24h Clock itself is free, MIT-licensed, and does not wait on your subscription. It
+    is already on this site, next to this page: <a href="cra-clock.mjs">cra-clock.mjs</a>,
+    <a href="csaf.mjs">csaf.mjs</a>, <a href="README.md">README.md</a>,
+    <a href="LICENSE">LICENSE</a>. Requires Node.js 18+, no install step, no account, no network
+    access.</p>
+    <pre><code><span class="k">node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z</span></code></pre>
+
+    <h2>Questions</h2>
+    <p>Write to <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a> any
+    time, including to cancel by email instead of the portal link.</p>
+
+    <p><a href="index.html">Back to CRA 24h Clock</a></p>
+  </section>
+
+  <footer>
+    <p>This confirmation page makes no network calls and verifies nothing itself; the
+    <code>session_id</code> shown above, if any, is the reference Stripe put in the URL, not an
+    independent check by this page. See <a href="index.html">CRA 24h Clock</a> for terms and
+    privacy notice.</p>
+  </footer>
+
+</main>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var product = params.get('product');
+  var sessionId = params.get('session_id');
+  var validId = sessionId && /^[A-Za-z0-9_.-]{8,255}$/.test(sessionId) && sessionId.indexOf('{') === -1;
+
+  if (!validId || (product !== 'setup' && product !== 'watch')) {
+    return; // leave the safe #state-generic section as the only one shown
+  }
+
+  var targetId = product === 'setup' ? 'state-setup' : 'state-watch';
+  var refId = product === 'setup' ? 'setup-ref' : 'watch-ref';
+
+  document.getElementById('state-generic').hidden = true;
+  document.getElementById(targetId).hidden = false;
+
+  var refEl = document.getElementById(refId);
+  var strong = document.createElement('strong');
+  strong.textContent = 'Reference: ';
+  var code = document.createElement('code');
+  code.textContent = sessionId;
+  refEl.appendChild(strong);
+  refEl.appendChild(code);
+})();
+</script>
+</body>
+</html>

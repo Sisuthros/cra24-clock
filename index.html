@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CRA 24h Clock — a defensible answer to "when did you become aware?"</title>
-<meta name="description" content="EU Cyber Resilience Act Article 14 applies from 11 September 2026. CRA 24h Clock records the moment of awareness, computes the 24h/72h/14d deadlines, drafts the notifications and keeps a tamper-evident log — on your own machine.">
+<title>CRA 24h Clock: a defensible answer to "when did you become aware?"</title>
+<meta name="description" content="EU Cyber Resilience Act Article 14 applies from 11 September 2026. CRA 24h Clock records the moment of awareness, computes the 24h/72h/14d deadlines, drafts the notifications and keeps a tamper-evident log, on your own machine.">
 <style>
   :root {
     --bg: #0d1117; --panel: #161b22; --border: #30363d;
@@ -41,14 +41,14 @@
 
   <p class="muted"><span class="badge">EU Cyber Resilience Act</span><span class="badge">Article 14</span><span class="badge">applies from 11 September 2026</span></p>
 
-  <h1>When the regulator asks <em>"when exactly did you become aware?"</em> — you will have one defensible answer, not a Slack scroll-back.</h1>
+  <h1>When the regulator asks <em>"when exactly did you become aware?"</em>, you will have one defensible answer, not a Slack scroll-back.</h1>
 
   <p>From <strong>11 September 2026</strong>, Article 14 of the EU Cyber Resilience Act
   (Regulation (EU) 2024/2847) obliges manufacturers of products with digital elements to report an
   <strong>actively exploited vulnerability</strong> to ENISA and their coordinating CSIRT with an
   <strong>early warning within 24 hours</strong>, a <strong>detailed notification within 72 hours</strong>
   and a <strong>final report within 14 days</strong> of a corrective measure becoming available.
-  The clock starts at <strong>awareness</strong>, not at confirmation — and the obligation covers
+  The clock starts at <strong>awareness</strong>, not at confirmation, and the obligation covers
   products you already shipped, not only new ones.</p>
 
   <p><strong>CRA 24h Clock</strong> is a single-file command-line tool that runs on your machine.
@@ -74,9 +74,9 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
   <p>After an incident, a market surveillance authority asks three questions, and all three are
   questions of <em>evidence</em>:</p>
   <ol>
-    <li><strong>When exactly did you become aware?</strong> — the 24-hour clock runs from that moment.</li>
-    <li><strong>Who decided this was active exploitation?</strong> — a name, not a committee.</li>
-    <li><strong>Was the notification submitted exactly once?</strong> — ENISA's Single Reporting
+    <li><strong>When exactly did you become aware?</strong> The 24-hour clock runs from that moment.</li>
+    <li><strong>Who decided this was active exploitation?</strong> A name, not a committee.</li>
+    <li><strong>Was the notification submitted exactly once?</strong> ENISA's Single Reporting
         Platform is a manual web form with no public API, so retries and duplicates are a human problem.</li>
   </ol>
   <p>CRA 24h Clock is built so that each of those questions has a one-command answer.</p>
@@ -88,13 +88,13 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
     <tr><td><code>aware</code></td><td>Records the awareness moment, the source and the person who made the call. Appends to a hash-chained log.</td></tr>
     <tr><td><code>deadlines</code></td><td>The 24 h / 72 h / 14 d deadlines from any awareness timestamp. Pure function: same input, same output, every time.</td></tr>
     <tr><td><code>draft</code></td><td>Pre-filled notification drafts for each stage, with every field the regulation expects marked either filled or <code>&lt;&lt;FILL&gt;&gt;</code>.</td></tr>
-    <tr><td><code>submitted</code></td><td>Marks a stage as submitted with your SRP reference — <em>exactly once</em>. A second attempt for the same stage is refused with a non-zero exit code, not silently absorbed.</td></tr>
+    <tr><td><code>submitted</code></td><td>Marks a stage as submitted with your SRP reference, <em>exactly once</em>. A second attempt for the same stage is refused with a non-zero exit code, not silently absorbed.</td></tr>
     <tr><td><code>csaf</code></td><td>A CSAF 2.0 advisory (OASIS mandatory fields validated) generated from the recorded event.</td></tr>
     <tr><td><code>status</code></td><td>Every open event, its deadlines, what is submitted, what is overdue.</td></tr>
-    <tr><td><code>verify</code></td><td>Re-computes the whole hash chain. If any line of the log was edited after the fact — including by us — it names the changed line and exits non-zero.</td></tr>
+    <tr><td><code>verify</code></td><td>Re-computes the whole hash chain. If any line of the log was edited after the fact, including by us, it names the changed line and exits non-zero.</td></tr>
   </table>
 
-  <h2 id="not">What it does <span class="no">not</span> have — read this before paying</h2>
+  <h2 id="not">What it does <span class="no">not</span> have: read this before paying</h2>
 
   <ul>
     <li><span class="no">No SBOM registry.</span></li>
@@ -104,7 +104,7 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
   </ul>
 
   <p><strong>A competitor sells all four of those at the same price.</strong> If you need a hosted
-  compliance suite, buy theirs — genuinely. What their product page does not state is where your
+  compliance suite, buy theirs. Genuinely. What their product page does not state is where your
   vulnerability data is hosted, and their audit trail is rows in their database. Which brings us to
   the two things this tool has that a hosted suite cannot give you:</p>
 
@@ -113,15 +113,15 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
         calls. There is nothing to host, so there is no hosting location to worry about, and no
         third party learns you have an unpatched, actively exploited vulnerability before ENISA does.</li>
     <li><span class="yes">Tamper-evident by construction.</span> Every log line commits to the hash
-        of the previous line. <code>verify</code> detects after-the-fact edits — even ones made by
+        of the previous line. <code>verify</code> detects after-the-fact edits, even ones made by
         the vendor. An audit trail you cannot quietly rewrite is a different product category from
         an audit trail someone promises not to rewrite.</li>
   </ul>
 
   <p>It also does <span class="no">not</span>:</p>
   <ul>
-    <li>submit anything to any authority — you file on ENISA's Single Reporting Platform yourself;</li>
-    <li>decide for you whether a vulnerability is actively exploited — that judgment, and its author, are recorded, not automated;</li>
+    <li>submit anything to any authority: you file on ENISA's Single Reporting Platform yourself;</li>
+    <li>decide for you whether a vulnerability is actively exploited: that judgment, and its author, are recorded, not automated;</li>
     <li>scan your code or produce an SBOM;</li>
     <li>constitute legal advice.</li>
   </ul>
@@ -135,9 +135,9 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
     <tr><td>Same awareness moment always produces the same three deadlines</td>
         <td><code>node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z</code> (run it twice)</td></tr>
     <tr><td>A submission cannot be recorded twice; tampering with the log is detected; drafts carry the awareness moment; CSAF output has all OASIS-mandatory fields</td>
-        <td><code>node cra-clock.test.mjs</code> — 50 assertions, plain Node, no test framework</td></tr>
+        <td><code>node cra-clock.test.mjs</code>, 50 assertions, plain Node, no test framework</td></tr>
     <tr><td>The tool makes no network calls</td>
-        <td><code>grep -En "require\(.(https?|net|dgram|tls).\)|from 'node:(https?|net|dgram|tls)'|fetch\(" cra-clock.mjs csaf.mjs</code> — zero matches</td></tr>
+        <td><code>grep -En "require\(.(https?|net|dgram|tls).\)|from 'node:(https?|net|dgram|tls)'|fetch\(" cra-clock.mjs csaf.mjs</code>, zero matches</td></tr>
   </table>
 
   <h2 id="price">The tool is free. The work around it is what costs money.</h2>
@@ -146,7 +146,8 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
   There is no account, no activation and no phone-home, so there is nothing we could charge you
   for switching off.</p>
 
-  <p>What you can buy is a person who has read Article 14 and will do the setup with you:</p>
+  <p>What you can buy is a person who has read Article 14 and will do the setup with you, and an
+  optional monthly check that keeps your evidence log and templates current:</p>
 
   <table>
     <tr><th>Engagement</th><th>What is delivered</th><th>Price</th></tr>
@@ -156,25 +157,34 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
           exploited-vulnerability case with your team, timed against the real 24 h / 72 h / 14 d
           clock; your first CSAF 2.0 advisory template filled with your publisher identity and
           namespace; a written note of who in your organisation decides "actively exploited".</td>
-      <td class="price">490 €</td>
+      <td class="price">490 €<br><a class="muted" href="https://buy.stripe.com/cNieVd2qt8dya9pa85ak009">Pay with Stripe &rarr;</a></td>
     </tr>
     <tr>
-      <td><strong>Standby</strong><br><span class="muted">monthly, optional, cancel any time</span></td>
-      <td>Reachable while a clock is running. Your draft early warning, detailed notification and
-          final report are read by a human before you submit them to the Single Reporting Platform.
-          Tool updates included.</td>
-      <td class="price">99 €</td>
+      <td><strong>CRA24 Watch</strong><br><span class="muted">monthly, cancel any time</span></td>
+      <td>A monthly regulatory and deadline digest with sources, updated tool and CSAF template
+          files, refreshed notification draft templates, and a reminder to run the evidence-chain
+          integrity check on your own machine. No staffed hotline and no guaranteed response time
+          are included or implied.</td>
+      <td class="price">99 €/mo<br><a class="muted" href="https://buy.stripe.com/14AbJ18ORgK481h6VTak00a">Subscribe with Stripe &rarr;</a></td>
     </tr>
   </table>
 
-  <p class="muted">Prices exclude VAT where applicable. <strong>Businesses only</strong> — invoices
-  are issued to a legal entity, not to consumers. Payment is by invoice; the invoice names the
-  seller of record and its VAT ID. Standby has no minimum term, and your evidence log is plain
-  JSONL on your own disk, so it stays readable and verifiable whether or not you are a customer.</p>
+  <p class="muted">Prices exclude VAT: the seller is not VAT-registered in Cyprus, so 0 % is
+  charged and the price above is the full amount. <strong>Businesses only</strong>: Setup and
+  CRA24 Watch are sold to a legal entity, not to consumers. Payment is processed by Stripe, and
+  your card statement shows DORAFIX.EU, the seller's payment account. Setup adds CRA24 after it.
+  CRA24 Watch shows DORAFIX.EU only, because Stripe does not allow a product suffix on
+  subscription statements; the product name appears on your Stripe receipt email instead.
+  CRA24 Watch renews monthly and you can cancel any time by replying to your receipt email;
+  cancellation takes effect at the end of the current billing period, and the period already paid
+  for is not refunded. Your evidence log is plain JSONL on your own disk, so it stays readable and
+  verifiable whether or not you are a customer. After payment, Stripe sends you to
+  <a href="success.html">a confirmation page</a> that says exactly what happens next for the
+  product you bought.</p>
 
-  <p><strong>To start:</strong> write to <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>
-  with your company name and what you ship. You will get a plain answer about whether Article 14
-  applies to you — including "it does not, you do not need this", when that is the true answer.</p>
+  <p><strong>Before you pay:</strong> write to <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>
+  with your company name and what you ship if you want a plain answer about whether Article 14
+  applies to you first, including a plain "it does not, you do not need this" when that is the true answer.</p>
 
   <h2 id="terms">Terms of service</h2>
 
@@ -182,15 +192,16 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
     <p><strong>Responsible party.</strong> This product, this page and these terms are the
     responsibility of <strong>Ville Myllyniemi</strong>, Larnaca, Cyprus
     (contact: <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>).
-    Invoicing is handled through a third-party invoicing service whose legal name and VAT ID
-    appear as seller of record on each invoice.</p>
+    Payment for Setup and CRA24 Watch is processed by Stripe. The seller of record is
+    Ville Myllyniemi; the card statement descriptor is explained under Pricing above.</p>
     <p><strong>License.</strong> CRA 24h Clock is released under the MIT licence. No fee is charged
     for the software, there is no licence to renew, and nothing about your use of it depends on
     being a customer. The software is provided as is, without warranty of any kind. The full text
     ships in the <code>LICENSE</code> file alongside the source.</p>
-    <p><strong>Engagements.</strong> Paid engagements (Setup, Standby) are professional services
-    invoiced to a business customer. Standby is billed monthly and either side may stop it at the
-    end of a billing period. Services are not sold to consumers.</p>
+    <p><strong>Engagements.</strong> Setup and CRA24 Watch are professional services purchased
+    through Stripe payment links. CRA24 Watch is billed monthly and either side may stop it at
+    the end of a billing period; the period already paid for is not refunded. Services are not
+    sold to consumers.</p>
     <p><strong>No legal advice.</strong> CRA 24h Clock is an evidence and deadline tool. It is not
     legal advice, and using it does not by itself make you compliant with Regulation (EU) 2024/2847.
     You remain solely responsible for the content, accuracy and timely submission of your notifications.</p>
@@ -222,7 +233,7 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
 
   <footer>
     <p>Built by Ville Myllyniemi with an AI agent family; a human reads and publishes everything on
-    this page. No testimonials appear here because the product has no customers yet — the test suite
+    this page. No testimonials appear here because the product has no customers yet. The test suite
     is the social proof.</p>
   </footer>
 
