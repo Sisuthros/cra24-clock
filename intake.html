@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRA 24h Clock Setup: intake</title>
+<meta name="description" content="The four answers CRA 24h Clock Setup needs before delivery starts. This page runs entirely in your browser and sends nothing anywhere.">
+<style>
+  /* Tyyli on kopioitu index.html:sta ja success.html:sta, plus lomakekentat.
+     Kaikki CSS on inline: ei ulkoisia fontteja, ei CDN:aa, ei rakennusvaihetta. */
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #9da7b3; --accent: #4cc38a; --warn: #e5534b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 1rem 0 .5rem; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 .75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  p, li { color: var(--text); }
+  .muted { color: var(--muted); }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+        padding: 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .badge { display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+           padding: .1rem .6rem; font-size: .8rem; color: var(--muted); margin-right: .4rem; }
+  .no { color: var(--warn); font-weight: 600; }
+  .yes { color: var(--accent); font-weight: 600; }
+  a { color: #58a6ff; }
+  footer { margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1rem;
+           font-size: .85rem; color: var(--muted); }
+  .box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+
+  fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem 1.25rem; margin: 1.5rem 0; }
+  legend { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 0 .4rem; }
+  label { display: block; margin: 1.1rem 0 .35rem; font-weight: 600; font-size: .95rem; }
+  label .hint { display: block; font-weight: 400; color: var(--muted); font-size: .85rem; margin-top: .2rem; }
+  label .optional { font-weight: 400; color: var(--muted); font-size: .8rem; margin-left: .4rem; }
+  input[type=text], input[type=email], input[type=url], select, textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: .5rem .65rem; font: inherit; font-size: .95rem;
+  }
+  textarea { min-height: 5rem; resize: vertical; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .85rem; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid #58a6ff; outline-offset: 1px; }
+  .checkline { display: flex; gap: .6rem; align-items: flex-start; margin-top: 1.2rem; }
+  .checkline input { width: auto; margin-top: .45rem; }
+  .checkline label { margin: 0; }
+  .actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1.5rem; }
+  button { border: 1px solid var(--border); border-radius: 6px; padding: .6rem 1.1rem;
+           font: inherit; font-weight: 600; cursor: pointer; background: var(--panel); color: var(--text); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .status { font-size: .88rem; color: var(--muted); }
+  .status.error { color: var(--warn); }
+  .status.ok { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="muted"><span class="badge">CRA 24h Clock</span><span class="badge">Setup, 490 &euro;</span><span class="badge">intake</span></p>
+
+  <h1>The four answers Setup needs before delivery can start.</h1>
+
+  <p><strong>What happens next:</strong> you send these answers, and the 490 &euro; Setup
+  delivers four things back as files: your evidence log configured for your actual product line,
+  a written dry-run of a fictional exploited-vulnerability case timed against the real
+  24 h / 72 h / 14 d clock, your first CSAF 2.0 advisory template filled with your publisher
+  identity and namespace, and a one-page note of who in your organisation decides
+  "actively exploited".</p>
+
+  <div class="box">
+    <p><strong>This page sends nothing.</strong> It has no backend, makes no network calls,
+    loads no third-party script or font and runs no analytics. Everything below happens in
+    your own browser. When you press the button, the page assembles your answers into the
+    JSON shape delivery uses (see <code>intake-schema.json</code> next to this file) and
+    lets you copy it or open it in your own mail client. Nothing leaves your machine until
+    you press send in that mail client yourself.</p>
+    <p><span class="no">Do not paste secrets.</span> No API keys, no tokens, no production
+    credentials, and no personal data about anyone other than the two people named below
+    (your contact details and your decision maker). The answers go only to this Setup
+    delivery and are used for nothing else.</p>
+  </div>
+
+  <form id="intake-form" novalidate>
+
+    <fieldset>
+      <legend>Contact</legend>
+      <label for="contact_name">Your name
+        <input type="text" id="contact_name" name="contact_name" required autocomplete="name">
+      </label>
+      <label for="contact_handle">Email
+        <span class="hint">Used for: delivery. The four files are sent back to this address.</span>
+        <input type="email" id="contact_handle" name="contact_handle" required autocomplete="email">
+      </label>
+      <label for="company">Company <span class="optional">optional</span>
+        <span class="hint">Setup is sold to a legal entity, not to consumers.</span>
+        <input type="text" id="company" name="company" autocomplete="organization">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>CSAF identity</legend>
+      <label for="product_name">Product name
+        <span class="hint">Used for: the CSAF 2.0 <code>product_id</code>, and for
+        <code>cra-clock.mjs aware --product</code> in your evidence log. Write it exactly as
+        you ship it.</span>
+        <input type="text" id="product_name" name="product_name" required>
+      </label>
+      <label for="publisher_name">Publisher name
+        <span class="hint">Used for: the CSAF 2.0 <code>publisher</code> block, an
+        OASIS-mandatory field. Usually your organisation's name as it appears on your
+        advisories.</span>
+        <input type="text" id="publisher_name" name="publisher_name" required>
+      </label>
+      <label for="publisher_namespace">Publisher namespace
+        <span class="hint">Used for: the CSAF 2.0 publisher namespace URI
+        (<code>cra-clock.mjs csaf --namespace</code>). Must start with
+        <code>https://</code>, for example <code>https://example.com</code>.</span>
+        <input type="url" id="publisher_namespace" name="publisher_namespace" required
+               pattern="https://.+" placeholder="https://example.com">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Who decides "actively exploited"</legend>
+      <label for="decision_maker_name">Decision maker: name
+        <span class="hint">Used for: <code>cra-clock.mjs aware --decided-by</code>, which
+        writes the name into the hash-chained evidence log, and for the one-page memo. A
+        regulator asks for a person, not a committee.</span>
+        <input type="text" id="decision_maker_name" name="decision_maker_name" required>
+      </label>
+      <label for="decision_maker_role">Decision maker: role
+        <span class="hint">Used for: the one-page decision-maker memo. For example CTO,
+        Head of Security, or the role title you actually use.</span>
+        <input type="text" id="decision_maker_role" name="decision_maker_role" required>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Context <span class="optional">optional</span></legend>
+      <label for="existing_vuln_process">Existing vulnerability process <span class="optional">optional</span>
+        <span class="hint">Used for: aiming the dry-run. With no process the dry-run teaches
+        the basics; with a certified one it compares the 24 h clock against what you already do.</span>
+        <select id="existing_vuln_process" name="existing_vuln_process">
+          <option value="" selected>Not answered</option>
+          <option value="none">None yet</option>
+          <option value="informal">Informal, not written down</option>
+          <option value="documented">Documented internally</option>
+          <option value="certified">Certified or externally audited</option>
+        </select>
+      </label>
+      <label for="existing_vuln_process_notes">What that process is <span class="optional">optional</span>
+        <span class="hint">Standard, tool or short description. No credentials.</span>
+        <textarea id="existing_vuln_process_notes" name="existing_vuln_process_notes"></textarea>
+      </label>
+      <label for="evidence_log_path">Where your evidence log should live <span class="optional">optional</span>
+        <span class="hint">Used for: the <code>CRA_CLOCK_LOG</code> path in your setup
+        instructions. A path on your own machine. Leave empty to use the tool default.</span>
+        <input type="text" id="evidence_log_path" name="evidence_log_path">
+      </label>
+      <label for="additional_notes">Anything else delivery should know <span class="optional">optional</span>
+        <textarea id="additional_notes" name="additional_notes"></textarea>
+      </label>
+    </fieldset>
+
+    <div class="checkline">
+      <input type="checkbox" id="redaction_confirmed" name="redaction_confirmed" required>
+      <label for="redaction_confirmed">I confirm this form contains no API keys, tokens or
+      production credentials, and no personal data about third parties. I understand these
+      answers are used only to deliver this Setup.</label>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Build my answers</button>
+      <span id="form-status" class="status"></span>
+    </div>
+  </form>
+
+  <div id="output" hidden>
+    <h2>Your answers (JSON)</h2>
+    <pre id="output-json"></pre>
+    <div class="actions">
+      <button type="button" id="copy-btn">Copy JSON</button>
+      <button type="button" id="mail-btn">Open in email</button>
+      <span id="copy-status" class="status"></span>
+    </div>
+    <p class="muted">Send it to
+      <a id="delivery-link" data-delivery-address="viltsu.myllyniemi@gmail.com"
+         href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>,
+      the same address named in the terms and privacy notice on
+      <a href="index.html">the offer page</a>. If your mail client shortens a long body,
+      use <strong>Copy JSON</strong> and paste it into the message yourself.</p>
+  </div>
+
+  <footer>
+    <p>This form has no backend. Pressing "Build my answers" transmits nothing; it only
+    assembles the JSON that delivery reads. Terms, privacy notice and what Setup does not
+    include are on <a href="index.html">CRA 24h Clock</a>.</p>
+  </footer>
+
+</main>
+<script>
+  // Riippuvuusvapaa: kokoaa lomakkeen vastaukset intake-schema.json:n muotoon,
+  // tarjoaa kopioinnin ja mailto-linkin. Ei verkkokutsuja, ei backendia -
+  // sellaista ei tassa tarjouksessa ole, eika sita saa keksia.
+  //
+  // HUOM (kentat jotka TARKOITUKSELLA puuttuvat tasta JSONista):
+  //   - engagement_id: syntyy vasta maksusta, ostaja ei voi tietaa sita.
+  //   - materials_complete: operaattorin laatuportti, ei ostajan itsearvio.
+  (function () {
+    var form = document.getElementById('intake-form');
+    var output = document.getElementById('output');
+    var outputJson = document.getElementById('output-json');
+    var formStatus = document.getElementById('form-status');
+    var copyBtn = document.getElementById('copy-btn');
+    var mailBtn = document.getElementById('mail-btn');
+    var copyStatus = document.getElementById('copy-status');
+    var deliveryLink = document.getElementById('delivery-link');
+
+    function value(name) {
+      var el = form.elements[name];
+      return el && el.value ? el.value.trim() : '';
+    }
+
+    function setStatus(el, text, kind) {
+      el.textContent = text;
+      el.className = kind ? 'status ' + kind : 'status';
+    }
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      setStatus(formStatus, '');
+
+      // Selainvalidointi vastaa skeemaa: required-kentat, sahkopostimuoto,
+      // publisher_namespace pattern="https://.+" ja pakollinen redaktiovahvistus.
+      if (!form.reportValidity()) {
+        setStatus(formStatus, 'Please fill in the required fields above.', 'error');
+        output.hidden = true;
+        return;
+      }
+
+      var submission = {
+        schema_version: '0',
+        // tenant ja offer_id ovat kiinteita talle tarjoukselle: ne kirjoitetaan
+        // samoiksi arvoiksi kuin intake-schema.json vaatii, eika kysyta ostajalta.
+        tenant: 'house',
+        ts: new Date().toISOString(),
+        offer_id: 'cra24-onboarding-490',
+        contact_name: value('contact_name'),
+        contact_handle: value('contact_handle'),
+        product_name: value('product_name'),
+        publisher_name: value('publisher_name'),
+        publisher_namespace: value('publisher_namespace'),
+        decision_maker_name: value('decision_maker_name'),
+        decision_maker_role: value('decision_maker_role'),
+        redaction_confirmed: form.elements['redaction_confirmed'].checked
+      };
+
+      // Valinnaiset kentat lisataan vain jos ne on tayttetty: skeema kieltaa
+      // tuntemattomat kentat, mutta tyhja merkkijono ei kerro mitaan.
+      var optional = ['company', 'existing_vuln_process', 'existing_vuln_process_notes',
+                      'evidence_log_path', 'additional_notes'];
+      for (var i = 0; i < optional.length; i += 1) {
+        var v = value(optional[i]);
+        if (v) submission[optional[i]] = v;
+      }
+
+      outputJson.textContent = JSON.stringify(submission, null, 2);
+      output.hidden = false;
+      setStatus(formStatus, 'Answers built below. Nothing was sent anywhere.', 'ok');
+      setStatus(copyStatus, '');
+    });
+
+    copyBtn.addEventListener('click', function () {
+      var text = outputJson.textContent;
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          setStatus(copyStatus, 'Copied.', 'ok');
+        }, function () {
+          legacyCopy(text);
+        });
+      } else {
+        legacyCopy(text);
+      }
+    });
+
+    // Varareitti vanhemmille selaimille ja file:// -konteksteille joissa
+    // Clipboard API ei ole kaytettavissa.
+    function legacyCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      setStatus(copyStatus, ok ? 'Copied.' : 'Copy failed. Select the JSON above and copy it manually.', ok ? 'ok' : 'error');
+    }
+
+    mailBtn.addEventListener('click', function () {
+      var text = outputJson.textContent;
+      if (!text) return;
+      var address = deliveryLink.getAttribute('data-delivery-address');
+      var subject = 'CRA24 Setup intake: ' + (value('product_name') || 'intake');
+      var url = 'mailto:' + address +
+        '?subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(text);
+      setStatus(copyStatus, 'Opening your mail client. Nothing is sent until you press send there.', 'ok');
+      window.location.href = url;
+    });
+  })();
+</script>
+</body>
+</html>
