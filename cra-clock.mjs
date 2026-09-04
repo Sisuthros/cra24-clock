@@ -54,17 +54,54 @@ const cmd = argv[0];
 const flag = (n, d = null) => { const i = argv.indexOf(`--${n}`); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
-/** CRA 14 art. kaskadi. Puhdas funktio: sama syöte, sama tulos, aina. */
-export function deadlines(awareIso) {
+/**
+ * CRA 14 art. kaskadi. Puhdas funktio: sama syöte, sama tulos, aina.
+ *
+ * Kaksi ensimmäistä määräaikaa lasketaan tietoisuudesta. Loppuraportti EI:
+ * asetus sitoo sen siihen hetkeen jolloin korjaava toimi on saatavilla.
+ * Niin kauan kuin sitä hetkeä ei tiedetä, määräaikaa ei ole olemassa, ja
+ * työkalu sanoo sen sellaisenaan sen sijaan että keksisi päivämäärän.
+ *
+ * Korjattu 2026-09-04: aiemmin `final.due` oli tietoisuus + 336 h. Se antoi
+ * aina liian aikaisen määräajan silloin kun korjaus valmistui myöhemmin kuin
+ * 14 vrk tietoisuudesta, ja se on juuri se virhe jonka estämiseksi tämä
+ * työkalu on olemassa.
+ */
+export function deadlines(awareIso, remediationIso = null) {
   const t = new Date(awareIso).getTime();
   if (Number.isNaN(t)) throw new Error(`aikaleima ei jäsenny: ${awareIso}`);
-  const at = (h) => new Date(t + h * 3600_000).toISOString();
+  const at = (base, h) => new Date(base + h * 3600_000).toISOString();
+
+  let r = null;
+  if (remediationIso != null && remediationIso !== '') {
+    r = new Date(remediationIso).getTime();
+    if (Number.isNaN(r)) throw new Error(`korjauksen aikaleima ei jäsenny: ${remediationIso}`);
+    if (r < t) throw new Error('korjaus ei voi olla saatavilla ennen kuin tietoisuus alkoi');
+  }
+
   return {
     aware_at: new Date(t).toISOString(),
-    early_warning: { stage: 'early', due: at(24), hours: 24, what: 'Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille' },
-    detailed: { stage: 'detailed', due: at(72), hours: 72, what: 'Tarkempi arvio, korjaavat toimet' },
-    final: { stage: 'final', due: at(24 * 14), hours: 336, what: 'Loppuraportti korjaavan toimen tultua saataville' },
+    remediation_available_at: r === null ? null : new Date(r).toISOString(),
+    early_warning: { stage: 'early', due: at(t, 24), hours: 24, basis: 'aware_at', pending: false, what: 'Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille' },
+    detailed: { stage: 'detailed', due: at(t, 72), hours: 72, basis: 'aware_at', pending: false, what: 'Tarkempi arvio, korjaavat toimet' },
+    final: r === null
+      ? {
+          stage: 'final', due: null, hours: 336, basis: 'remediation_available_at', pending: true,
+          earliest_possible: at(t, 336),
+          what: 'Loppuraportti. Määräaika alkaa vasta kun korjaava toimi on saatavilla, joten sitä ei voi vielä laskea.',
+        }
+      : {
+          stage: 'final', due: at(r, 336), hours: 336, basis: 'remediation_available_at', pending: false,
+          earliest_possible: at(t, 336),
+          what: 'Loppuraportti korjaavan toimen tultua saataville',
+        },
   };
+}
+
+/** Näytettävä määräaika, kun sitä ei välttämättä ole. Ei koskaan keksittyä päivää. */
+export function dueText(stageObj) {
+  if (stageObj.due) return stageObj.due;
+  return `ei vielä laskettavissa (aikaisintaan ${stageObj.earliest_possible}, alkaa korjauksen saatavillaolosta)`;
 }
 
 function readLog() {
@@ -112,15 +149,16 @@ const STAGES = ['early', 'detailed', 'final'];
 
 /** Esitäytetty luonnos. Pakolliset kentät joita ostaja ei voi unohtaa. */
 function draftFor(ev, stage) {
-  const d = deadlines(ev.aware_at);
-  const due = d[stage === 'early' ? 'early_warning' : stage].due;
+  const rem = remediationFor(ev.id);
+  const d = deadlines(ev.aware_at, rem);
+  const st = d[stage === 'early' ? 'early_warning' : stage];
   const lines = [
-    `CRA 14 art. — ${stage === 'early' ? 'ENNAKKOVAROITUS (24 h)' : stage === 'detailed' ? 'TARKEMPI ARVIO (72 h)' : 'LOPPURAPORTTI (14 vrk)'}`,
+    `CRA 14 art. — ${stage === 'early' ? 'ENNAKKOVAROITUS (24 h)' : stage === 'detailed' ? 'TARKEMPI ARVIO (72 h)' : 'LOPPURAPORTTI (14 vrk korjauksesta)'}`,
     ``,
     `Tuote: ${ev.product}`,
     `Haavoittuvuus: ${ev.vuln}`,
     `Tietoisuus alkoi: ${ev.aware_at}`,
-    `Määräaika: ${due}`,
+    `Määräaika: ${dueText(st)}`,
     `Arvion teki: ${ev.decided_by}`,
     `Lähde: ${ev.source}`,
     ``,
@@ -128,7 +166,14 @@ function draftFor(ev, stage) {
     `Jäsenvaltiot joissa tuote on saatavilla: <<TÄYTÄ>>`,
   ];
   if (stage !== 'early') lines.push(`Korjaavat tai lieventävät toimet: <<TÄYTÄ>>`, `Vaikutusarvio: <<TÄYTÄ>>`);
-  if (stage === 'final') lines.push(`Korjaus saatavilla alkaen: <<TÄYTÄ>>`, `Jakelutapa käyttäjille: <<TÄYTÄ>>`);
+  if (stage === 'final') {
+    lines.push(
+      rem
+        ? `Korjaus saatavilla alkaen: ${rem}  (kirjattu todisteketjuun)`
+        : `Korjaus saatavilla alkaen: <<TÄYTÄ — kirjaa se komennolla: cra-clock.mjs remediation --id ${ev.id.slice(0, 8)} --at <ISO>>>`,
+      `Jakelutapa käyttäjille: <<TÄYTÄ>>`
+    );
+  }
   lines.push(
     ``,
     `Tapahtumatunnus: ${ev.id}`,
@@ -143,19 +188,26 @@ function draftFor(ev, stage) {
 const events = () => readLog().filter((r) => r.type === 'aware');
 const findEvent = (id) => events().find((e) => e.id === id || e.id.startsWith(id));
 
+/** Viimeisin kirjattu korjauksen saatavillaolo, tai null. Tämä ratkaisee loppuraportin määräajan. */
+function remediationFor(eventId) {
+  const rows = readLog().filter((r) => r.type === 'remediation' && r.event_id === eventId);
+  return rows.length ? rows[rows.length - 1].available_at : null;
+}
+
 // --------------------------------------------------------------------------
 
 if (cmd === 'deadlines') {
   const aware = flag('aware');
   if (!aware) { console.error('Käyttö: deadlines --aware <ISO-aikaleima>'); process.exit(2); }
   let d;
-  try { d = deadlines(aware); } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
+  try { d = deadlines(aware, flag('remediation')); } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
   if (argv.includes('--json')) { console.log(JSON.stringify(d, null, 2)); }
   else {
     console.log(`Tietoisuus alkoi: ${d.aware_at}`);
+    if (d.remediation_available_at) console.log(`Korjaus saatavilla: ${d.remediation_available_at}`);
     for (const k of ['early_warning', 'detailed', 'final']) {
       const s = d[k];
-      console.log(`  ${String(s.hours).padStart(3)} h  ${s.due}  ${s.what}`);
+      console.log(`  ${String(s.hours).padStart(3)} h  ${dueText(s)}  ${s.what}`);
     }
   }
 } else if (cmd === 'aware') {
@@ -175,7 +227,7 @@ if (cmd === 'deadlines') {
   const d = deadlines(ev.aware_at);
   console.log(`KIRJATTU ${ev.id}`);
   console.log(`  tietoisuus: ${ev.aware_at}   arvion teki: ${ev.decided_by}`);
-  for (const k of ['early_warning', 'detailed', 'final']) console.log(`  ${String(d[k].hours).padStart(3)} h  ${d[k].due}`);
+  for (const k of ['early_warning', 'detailed', 'final']) console.log(`  ${String(d[k].hours).padStart(3)} h  ${dueText(d[k])}`);
   console.log(`  ketjun tiiviste: ${ev.entry_sha256.slice(0, 16)}…`);
 } else if (cmd === 'draft') {
   const id = flag('id'); const stage = flag('stage');
@@ -200,19 +252,37 @@ if (cmd === 'deadlines') {
   const row = appendChained({ type: 'submitted', event_id: ev.id, stage, ref });
   console.log(`LÄHETETTY MERKITTY ${stage} — ${ref}`);
   console.log(`  ketjun tiiviste: ${row.entry_sha256.slice(0, 16)}…`);
+} else if (cmd === 'remediation') {
+  // Loppuraportin määräaika alkaa tästä hetkestä, ei tietoisuudesta.
+  const id = flag('id'); const at = flag('at');
+  if (!id || !at) { console.error('Käyttö: remediation --id <id> --at <ISO-aikaleima>'); process.exit(2); }
+  const ev = findEvent(id);
+  if (!ev) { console.error(`🛑 tapahtumaa ei löydy: ${id}`); process.exit(2); }
+  let d;
+  try { d = deadlines(ev.aware_at, at); } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
+  const row = appendChained({ type: 'remediation', event_id: ev.id, available_at: d.remediation_available_at });
+  console.log(`KORJAUS SAATAVILLA KIRJATTU ${d.remediation_available_at}`);
+  console.log(`  loppuraportin määräaika: ${d.final.due}`);
+  console.log(`  ketjun tiiviste: ${row.entry_sha256.slice(0, 16)}…`);
 } else if (cmd === 'status') {
   const rows = readLog();
   const evs = events();
   const now = Date.now();
   const out = evs.map((ev) => {
-    const d = deadlines(ev.aware_at);
+    const rem = remediationFor(ev.id);
+    const d = deadlines(ev.aware_at, rem);
     const stages = STAGES.map((s) => {
       const key = s === 'early' ? 'early_warning' : s;
       const sub = rows.find((r) => r.type === 'submitted' && r.event_id === ev.id && r.stage === s);
-      const due = new Date(d[key].due).getTime();
-      return { stage: s, due: d[key].due, submitted: Boolean(sub), ref: sub?.ref ?? '', overdue: !sub && now > due, hours_left: Number(((due - now) / 3600_000).toFixed(1)) };
+      const st = d[key];
+      // Ilman määräaikaa ei ole myöhässäoloa. Tuntematon ei ole sama kuin myöhässä.
+      if (st.due === null) {
+        return { stage: s, due: null, pending: true, earliest_possible: st.earliest_possible, submitted: Boolean(sub), ref: sub?.ref ?? '', overdue: false, hours_left: null };
+      }
+      const due = new Date(st.due).getTime();
+      return { stage: s, due: st.due, pending: false, submitted: Boolean(sub), ref: sub?.ref ?? '', overdue: !sub && now > due, hours_left: Number(((due - now) / 3600_000).toFixed(1)) };
     });
-    return { id: ev.id, product: ev.product, vuln: ev.vuln, aware_at: ev.aware_at, stages };
+    return { id: ev.id, product: ev.product, vuln: ev.vuln, aware_at: ev.aware_at, remediation_available_at: rem, stages };
   });
   if (argv.includes('--json')) { console.log(JSON.stringify({ events: out, chain: verifyChain(rows) }, null, 2)); }
   else if (!out.length) { console.log('Ei kirjattuja tapahtumia.'); }
@@ -220,9 +290,14 @@ if (cmd === 'deadlines') {
     for (const e of out) {
       console.log(`${e.id.slice(0, 8)}  ${e.product} — ${e.vuln}   tietoisuus ${e.aware_at}`);
       for (const s of e.stages) {
-        const mark = s.submitted ? '✅' : s.overdue ? '🔴' : '·';
-        const tail = s.submitted ? `lähetetty (${s.ref})` : s.overdue ? 'MYÖHÄSSÄ' : `${s.hours_left} h jäljellä`;
-        console.log(`   ${mark} ${s.stage.padEnd(9)} ${s.due}  ${tail}`);
+        const mark = s.submitted ? '✅' : s.overdue ? '🔴' : s.pending ? '⏳' : '·';
+        const tail = s.submitted
+          ? `lähetetty (${s.ref})`
+          : s.overdue ? 'MYÖHÄSSÄ'
+          : s.pending ? 'odottaa korjauksen saatavillaoloa'
+          : `${s.hours_left} h jäljellä`;
+        const due = s.due ?? `aikaisintaan ${s.earliest_possible}`;
+        console.log(`   ${mark} ${s.stage.padEnd(9)} ${due}  ${tail}`);
       }
     }
     const v = verifyChain(rows);
