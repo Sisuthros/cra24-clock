@@ -152,7 +152,7 @@ Korjaus saatavilla: 2026-10-01T08:00:00.000Z
     <tr><td>Same awareness moment always produces the same three deadlines</td>
         <td><code>node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z</code> (run it twice)</td></tr>
     <tr><td>A submission cannot be recorded twice; tampering with the log is detected; drafts carry the awareness moment; CSAF output has all OASIS-mandatory fields</td>
-        <td><code>node cra-clock.test.mjs</code>, 50 assertions, plain Node, no test framework</td></tr>
+        <td><code>node cra-clock.test.mjs</code>, 52 assertions, plain Node, no test framework</td></tr>
     <tr><td>The tool makes no network calls</td>
         <td><code>grep -En "require\(.(https?|net|dgram|tls).\)|from 'node:(https?|net|dgram|tls)'|fetch\(" cra-clock.mjs csaf.mjs</code>, zero matches</td></tr>
   </table>
