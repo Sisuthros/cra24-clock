@@ -40,7 +40,15 @@ let r = run('deadlines', '--aware', '2026-09-11T08:00:00Z', '--json');
 let d = JSON.parse(r.out);
 check('24 h ennakkovaroitus', d.early_warning.due === '2026-09-12T08:00:00.000Z', d.early_warning.due);
 check('72 h tarkempi arvio', d.detailed.due === '2026-09-14T08:00:00.000Z', d.detailed.due);
-check('14 vrk loppuraportti', d.final.due === '2026-09-25T08:00:00.000Z', d.final.due);
+// CRA 14 art.: loppuraportin määräaika EI ala tietoisuudesta vaan siitä kun
+// korjaava toimi on saatavilla (Reg (EU) 2024/2847 art. 14, verifioitu
+// lähteestä 2026-09-09). Ilman korjauspäivää määräaikaa ei ole, ja työkalu
+// sanoo "pending" sen sijaan että keksisi päivän. Vanha testi vaati tietoisuus
+// + 336 h, mikä oli juuri se virhe jonka tuote on olemassa estämään.
+check('loppuraportti on pending ilman korjauspäivää', d.final.due === null && d.final.pending === true && d.final.earliest_possible === '2026-09-25T08:00:00.000Z', JSON.stringify(d.final));
+const rRem = run('deadlines', '--aware', '2026-09-11T08:00:00Z', '--remediation', '2026-10-01T08:00:00Z', '--json');
+const dRem = JSON.parse(rRem.out);
+check('loppuraportti = korjaus + 14 vrk', dRem.final.due === '2026-10-15T08:00:00.000Z', dRem.final.due);
 const r2 = run('deadlines', '--aware', '2026-09-11T08:00:00Z', '--json');
 check('sama syöte tuottaa saman tuloksen', r.out === r2.out);
 check('kelvoton aikaleima hylätään', run('deadlines', '--aware', 'eilen').code === 2);
@@ -99,7 +107,11 @@ r = run('aware', '--product', 'Vanha', '--vuln', 'CVE-2020-0001', '--source', 'h
 const oldId = (/KIRJATTU (\S+)/.exec(r.out) ?? [])[1];
 const st2 = JSON.parse(run('status', '--json').out);
 const oldEv = st2.events.find((e) => e.id === oldId);
-check('menneen määräajan vaihe on myöhässä', oldEv.stages.every((s) => s.overdue === true), JSON.stringify(oldEv.stages));
+const oldStage = (s) => oldEv.stages.find((x) => x.stage === s);
+check('menneet kiinteät määräajat ovat myöhässä (early + detailed)', oldStage('early').overdue === true && oldStage('detailed').overdue === true, JSON.stringify(oldEv.stages));
+// Loppuraportti ei voi olla myöhässä ennen kuin korjauspäivä on kirjattu:
+// tuntematon määräaika ei ole sama kuin myöhässä oleva määräaika.
+check('loppuraportti ei ole myöhässä ilman korjauspäivää (pending)', oldStage('final').overdue === false && oldStage('final').pending === true, JSON.stringify(oldStage('final')));
 check('myöhässä oleva ei ole merkitty lähetetyksi', oldEv.stages.every((s) => s.submitted === false));
 
 // 7. CSAF 2.0 -vienti. Kelvoton neuvo on pahempi kuin puuttuva, joten

@@ -25,7 +25,23 @@ node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z
 Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
    24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
    72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
-  336 h  2026-09-25T08:00:00.000Z  Loppuraportti korjaavan toimen tultua saataville
+  336 h  ei vielä laskettavissa (aikaisintaan 2026-09-25T08:00:00.000Z, alkaa korjauksen saatavillaolosta)  Loppuraportti. Määräaika alkaa vasta kun korjaava toimi on saatavilla, joten sitä ei voi vielä laskea.
+```
+
+The final-report clock does not start at awareness: it starts when a corrective
+measure becomes available, so until you record one the tool refuses to invent a
+date. Record the fix and the 14-day deadline appears:
+
+```
+node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z --remediation 2026-10-01T08:00:00Z
+```
+
+```
+Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
+Korjaus saatavilla: 2026-10-01T08:00:00.000Z
+   24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
+   72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
+  336 h  2026-10-15T08:00:00.000Z  Loppuraportti korjaavan toimen tultua saataville
 ```
 
 The CLI currently speaks Finnish; the evidence log and the CSAF 2.0 export are
@@ -36,7 +52,7 @@ language-neutral JSON. English CLI output is on the roadmap and is not promised 
 | Command | What you get |
 |---|---|
 | `aware` | Records the awareness moment, its source and the person who made the call. Appends to a hash-chained log. |
-| `deadlines` | The 24 h / 72 h / 14 d deadlines from any awareness timestamp. Same input, same output, every time. |
+| `deadlines` | The 24 h and 72 h deadlines from an awareness timestamp; the 14-day final-report clock starts only once a corrective measure is available. Same input, same output, every time. |
 | `draft` | Pre-filled notification drafts per stage; every field the regulation expects is either filled or marked `<<FILL>>`. |
 | `submitted` | Marks a stage submitted with your SRP reference — *exactly once*. A second attempt exits non-zero instead of being silently absorbed. |
 | `csaf` | A CSAF 2.0 advisory with the OASIS-mandatory fields validated. |
@@ -49,7 +65,7 @@ language-neutral JSON. English CLI output is on the roadmap and is not promised 
 node cra-clock.test.mjs
 ```
 
-50 assertions, plain Node, no test framework: deadlines are deterministic, a submission
+52 assertions, plain Node, no test framework: deadlines are deterministic, a submission
 cannot be recorded twice, tampering with the log is detected, drafts carry the awareness
 moment, and CSAF output has every OASIS-mandatory field.
 
