@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRA Article 14 Deadline &amp; Notification Assistant — free, runs in your browser</title>
+<meta name="description" content="Enter when you became aware of an actively exploited vulnerability and get the exact EU Cyber Resilience Act Article 14 deadlines (24h / 72h / 14d), draft notifications and a CSAF 2.0 skeleton. 100% client-side: no network calls, nothing leaves your browser.">
+<style>
+  /* Style copied from index.html and intake.html: same palette, same panel/box
+     language, plus the form controls intake.html already defined. All CSS
+     inline, no external fonts, no CDN, no build step. */
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #9da7b3; --accent: #4cc38a; --warn: #e5534b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 1rem 0 .5rem; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 .75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; }
+  p, li { color: var(--text); }
+  .muted { color: var(--muted); }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+        padding: 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .badge { display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+           padding: .1rem .6rem; font-size: .8rem; color: var(--muted); margin-right: .4rem; }
+  .no { color: var(--warn); font-weight: 600; }
+  .yes { color: var(--accent); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+  td, th { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  a { color: #58a6ff; }
+  .price { font-size: 2.2rem; font-weight: 700; }
+  footer { margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1rem;
+           font-size: .85rem; color: var(--muted); }
+  .box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+
+  fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem 1.25rem; margin: 1.5rem 0; }
+  legend { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 0 .4rem; }
+  label { display: block; margin: 1.1rem 0 .35rem; font-weight: 600; font-size: .95rem; }
+  label .hint { display: block; font-weight: 400; color: var(--muted); font-size: .85rem; margin-top: .2rem; }
+  label .optional { font-weight: 400; color: var(--muted); font-size: .8rem; margin-left: .4rem; }
+  input[type=text], input[type=url], input[type=datetime-local], select, textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: .5rem .65rem; font: inherit; font-size: .95rem;
+  }
+  textarea { min-height: 5rem; resize: vertical; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .85rem; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid #58a6ff; outline-offset: 1px; }
+  .checkline { display: flex; gap: .6rem; align-items: flex-start; margin-top: 1.2rem; }
+  .checkline input { width: auto; margin-top: .45rem; }
+  .checkline label { margin: 0; }
+  .actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+  button { border: 1px solid var(--border); border-radius: 6px; padding: .6rem 1.1rem;
+           font: inherit; font-weight: 600; cursor: pointer; background: var(--panel); color: var(--text); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+  button.small { padding: .35rem .7rem; font-size: .85rem; font-weight: 500; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .status { font-size: .88rem; color: var(--muted); }
+  .status.error { color: var(--warn); }
+  .status.ok { color: var(--accent); }
+
+  .deadline-row { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline;
+                  padding: .6rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .deadline-row:last-child { border-bottom: none; }
+  .deadline-row .label { font-weight: 600; }
+  .deadline-row .due { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .92rem; }
+  .deadline-row .countdown { font-size: .82rem; color: var(--muted); }
+  .deadline-row .countdown.overdue { color: var(--warn); font-weight: 600; }
+  .deadline-row .countdown.pending { color: var(--muted); }
+  .draft-box { position: relative; margin: 1rem 0; }
+  .draft-box .actions { margin-top: .5rem; }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="muted"><span class="badge">EU Cyber Resilience Act</span><span class="badge">Article 14</span><span class="badge">free browser tool</span></p>
+
+  <h1>CRA Article 14 Deadline &amp; Notification Assistant</h1>
+
+  <p>From <strong>11 September 2026</strong>, Article 14 of the EU Cyber Resilience Act
+  (Regulation (EU) 2024/2847) obliges manufacturers to report an <strong>actively exploited
+  vulnerability</strong> with an <strong>early warning within 24 hours</strong> of becoming aware,
+  a <strong>detailed notification within 72 hours</strong>, and a <strong>final report within
+  14 days</strong> of a corrective measure becoming available. This page computes those three
+  deadlines from the moment you enter, drafts the three notifications, and builds a CSAF 2.0
+  skeleton you can download.</p>
+
+  <div class="box">
+    <p><strong>Everything below runs 100% in your browser.</strong> This page makes no network
+    calls, loads no third-party script or font, sets no cookies and has no backend. What you type
+    here — product name, vulnerability identifier, dates — never leaves your machine. That is the
+    same promise the command-line tool <a href="cra-clock.mjs">cra-clock.mjs</a> makes; this page
+    is its browser companion.</p>
+    <p class="muted">Difference from the CLI: this page does <strong>not</strong> keep a
+    persistent, tamper-evident hash-chained log across visits — closing the tab forgets
+    everything, on purpose, because nothing is stored. For a real audit trail that survives
+    reboots and proves nothing was edited after the fact, download
+    <a href="cra-clock.mjs">cra-clock.mjs</a> and run it on your machine
+    (see <a href="README.md">README.md</a>).</p>
+  </div>
+
+  <h2 id="step1">1. When did you become aware?</h2>
+
+  <p>Enter times in <strong>UTC</strong> (the same convention ENISA's Single Reporting Platform
+  and the CLI tool use). The 24h and 72h deadlines start here.</p>
+
+  <form id="deadline-form" novalidate>
+    <label for="aware_at">Awareness moment (UTC)
+      <span class="hint">The moment you — or anyone in your organisation — first became aware
+        this vulnerability is actively exploited. Not when it was fixed, not when it was
+        confirmed: when you first knew.</span>
+      <input type="datetime-local" id="aware_at" name="aware_at" required step="1">
+    </label>
+    <label for="remediation_at">Corrective measure available (UTC) <span class="optional">optional</span>
+      <span class="hint">Leave empty if a fix is not available yet. The final-report deadline
+        cannot be calculated until this is known — Article 14 ties it to remediation, not to
+        awareness.</span>
+      <input type="datetime-local" id="remediation_at" name="remediation_at" step="1">
+    </label>
+    <p id="deadline-error" class="status error" hidden></p>
+  </form>
+
+  <h2 id="step2">2. Your three deadlines</h2>
+
+  <div id="deadlines-output" class="box">
+    <p class="muted">Enter an awareness moment above to see your deadlines.</p>
+  </div>
+
+  <h2 id="step3">3. Notification details</h2>
+
+  <p>These fill the drafts below and the CSAF export. Anything left blank is marked
+  <code>&lt;&lt;FILL&gt;&gt;</code> in the draft text so you cannot accidentally submit a gap.</p>
+
+  <form id="details-form" novalidate>
+    <fieldset>
+      <legend>What and who</legend>
+      <label for="product">Product name
+        <input type="text" id="product" name="product" placeholder="e.g. Acme Firewall 3000">
+      </label>
+      <label for="vuln">Vulnerability identifier
+        <span class="hint">A CVE ID if you have one (e.g. CVE-2026-1234), otherwise your own
+          reference.</span>
+        <input type="text" id="vuln" name="vuln" placeholder="CVE-2026-1234">
+      </label>
+      <label for="source">Source / evidence link
+        <input type="text" id="source" name="source" placeholder="https://... or an internal ticket reference">
+      </label>
+      <label for="decided_by">Assessment made by
+        <span class="hint">A name, not a committee — the regulator asks for a person.</span>
+        <input type="text" id="decided_by" name="decided_by" placeholder="Full name">
+      </label>
+      <div class="checkline">
+        <input type="checkbox" id="actively_exploited" name="actively_exploited">
+        <label for="actively_exploited">Actively exploited — check only if you know this to be
+          true. This tool does not decide it for you; leaving it unchecked marks the drafts
+          <code>&lt;&lt;FILL: yes/no and justification&gt;&gt;</code> instead of assuming "no".</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>CSAF 2.0 publisher identity <span class="optional">only needed for the CSAF download</span></legend>
+      <label for="publisher_name">Publisher name
+        <input type="text" id="publisher_name" name="publisher_name" placeholder="Your organisation's name">
+      </label>
+      <label for="publisher_namespace">Publisher namespace
+        <span class="hint">Must start with <code>https://</code>. This becomes part of the CSAF
+          document identity — it is not invented if you leave it blank; the download is refused
+          instead.</span>
+        <input type="url" id="publisher_namespace" name="publisher_namespace" placeholder="https://example.com" pattern="https://.+">
+      </label>
+    </fieldset>
+  </form>
+
+  <h2 id="step4">4. Draft notifications</h2>
+
+  <p class="muted">Copy the one you need. Every draft says it is not legal advice and that this
+  tool submits nothing — that line is not decorative, it is the point.</p>
+
+  <div id="drafts"></div>
+
+  <h2 id="step5">5. CSAF 2.0 advisory</h2>
+
+  <p>A CSAF 2.0 (<code>csaf_security_advisory</code>) skeleton built from the fields above, with
+  the OASIS-mandatory fields checked before download. A publisher name and namespace are
+  required — the file is not generated without them, on purpose: a CSAF advisory with a made-up
+  publisher is worse than no advisory.</p>
+
+  <div class="actions">
+    <button type="button" id="csaf-download" class="primary">Download CSAF 2.0 JSON</button>
+    <span id="csaf-status" class="status"></span>
+  </div>
+
+  <h2 id="help">Want this handled properly, not just drafted?</h2>
+
+  <p>This page gives you the deadlines and the paperwork skeleton. It does not run a dry-run with
+  your team, does not fill in your CSAF publisher identity for you, and does not check your real
+  notification before you submit it. That is what the paid setup below does.</p>
+
+  <table>
+    <tr><th>Engagement</th><th>What is delivered</th><th>Price</th></tr>
+    <tr>
+      <td><strong>Setup</strong><br><span class="muted">one-off</span></td>
+      <td>Your evidence log configured for your actual product line; a dry-run of a fictional
+          exploited-vulnerability case with your team, timed against the real 24 h / 72 h / 14 d
+          clock; your first CSAF 2.0 advisory template filled with your publisher identity and
+          namespace; a written note of who in your organisation decides "actively exploited".
+          <br><span class="no">Does not</span> submit anything to ENISA and
+          <span class="no">is not</span> legal advice — it is setup, rehearsal and review, done
+          with you, not for you.</td>
+      <td class="price">490 €<br><a class="muted" href="https://buy.stripe.com/cNieVd2qt8dya9pa85ak009">Pay with Stripe &rarr;</a></td>
+    </tr>
+    <tr>
+      <td><strong>CRA24 Watch</strong><br><span class="muted">monthly, cancel any time</span></td>
+      <td>A monthly regulatory and deadline digest with sources, updated tool and CSAF template
+          files, refreshed notification draft templates, and a reminder to run the evidence-chain
+          integrity check on your own machine. No staffed hotline and no guaranteed response time
+          are included or implied.</td>
+      <td class="price">99 €/mo<br><a class="muted" href="https://buy.stripe.com/14AbJ18ORgK481h6VTak00a">Subscribe with Stripe &rarr;</a></td>
+    </tr>
+  </table>
+
+  <p class="muted">Prices, VAT treatment, cancellation terms, full terms of service and the
+  privacy notice for these engagements are all on the
+  <a href="index.html#price">main project page</a> — this page does not duplicate them so they
+  cannot drift out of sync. Payment happens on Stripe's own site; nothing you typed above is
+  sent anywhere by clicking these links.</p>
+
+  <footer>
+    <p><a href="index.html">&larr; Back to CRA 24h Clock</a> · Same responsible party as the main
+    page: Ville Myllyniemi, Larnaca, Cyprus
+    (<a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>). CRA 24h Clock
+    is free and MIT-licensed; see <a href="LICENSE">LICENSE</a>. This page verifies nothing
+    itself and is not legal advice.</p>
+  </footer>
+
+</main>
+<script>
+(function () {
+  'use strict';
+
+  // ---------------------------------------------------------------------
+  // Ported from cra-clock.mjs, function-for-function. Same input, same
+  // output — verified against cra-clock.mjs's own known test values before
+  // shipping (see repo notes). Do not "simplify" this without re-checking
+  // against cra-clock.mjs; the final-report branch is the one earlier CRA24
+  // Clock history got wrong once already.
+  // ---------------------------------------------------------------------
+
+  function deadlines(awareIso, remediationIso) {
+    var t = new Date(awareIso).getTime();
+    if (Number.isNaN(t)) throw new Error('awareness timestamp does not parse: ' + awareIso);
+    function at(base, h) { return new Date(base + h * 3600000).toISOString(); }
+
+    var r = null;
+    if (remediationIso !== null && remediationIso !== undefined && remediationIso !== '') {
+      r = new Date(remediationIso).getTime();
+      if (Number.isNaN(r)) throw new Error('remediation timestamp does not parse: ' + remediationIso);
+      if (r < t) throw new Error('remediation cannot be available before awareness began');
+    }
+
+    return {
+      aware_at: new Date(t).toISOString(),
+      remediation_available_at: r === null ? null : new Date(r).toISOString(),
+      early_warning: {
+        stage: 'early', due: at(t, 24), hours: 24, basis: 'aware_at', pending: false,
+        what: 'Early warning to ENISA and the coordinating CSIRT',
+      },
+      detailed: {
+        stage: 'detailed', due: at(t, 72), hours: 72, basis: 'aware_at', pending: false,
+        what: 'Detailed assessment and corrective actions',
+      },
+      final: r === null
+        ? {
+            stage: 'final', due: null, hours: 336, basis: 'remediation_available_at', pending: true,
+            earliest_possible: at(t, 336),
+            what: 'Final report. The deadline only starts once a corrective measure is available, so it cannot be calculated yet.',
+          }
+        : {
+            stage: 'final', due: at(r, 336), hours: 336, basis: 'remediation_available_at', pending: false,
+            earliest_possible: at(t, 336),
+            what: 'Final report once the corrective measure is available',
+          },
+    };
+  }
+
+  function dueText(stageObj) {
+    if (stageObj.due) return stageObj.due;
+    return 'not yet calculable (earliest ' + stageObj.earliest_possible + ', starts once the corrective measure is available)';
+  }
+
+  var STAGES = ['early', 'detailed', 'final'];
+
+  function draftFor(ev, stage, remediationIso) {
+    var d = deadlines(ev.aware_at, remediationIso);
+    var st = d[stage === 'early' ? 'early_warning' : stage];
+    var heading = stage === 'early' ? 'EARLY WARNING (24 h)'
+      : stage === 'detailed' ? 'DETAILED ASSESSMENT (72 h)'
+      : 'FINAL REPORT (14 days from remediation)';
+    var lines = [
+      'CRA Article 14 — ' + heading,
+      '',
+      'Product: ' + ev.product,
+      'Vulnerability: ' + ev.vuln,
+      'Awareness began: ' + ev.aware_at,
+      'Deadline: ' + dueText(st),
+      'Assessment made by: ' + ev.decided_by,
+      'Source: ' + ev.source,
+      '',
+      'Actively exploited: ' + (ev.actively_exploited ? 'YES' : '<<FILL: yes/no and justification>>'),
+      'Member states where the product is available: <<FILL>>',
+    ];
+    if (stage !== 'early') {
+      lines.push('Corrective or mitigating measures: <<FILL>>', 'Impact assessment: <<FILL>>');
+    }
+    if (stage === 'final') {
+      lines.push(
+        remediationIso
+          ? 'Corrective measure available from: ' + new Date(remediationIso).toISOString() + ' (entered above)'
+          : 'Corrective measure available from: <<FILL — enter it in step 1 once known>>',
+        'Distribution method to users: <<FILL>>'
+      );
+    }
+    lines.push(
+      '',
+      'Event reference (generated in your browser, not persisted): ' + ev.id,
+      '',
+      'This is a draft. It is not legal advice, and this tool does not submit anything to any',
+      "authority. Submission happens on ENISA's Single Reporting Platform."
+    );
+    return lines.join('\n');
+  }
+
+  // ---------------------------------------------------------------------
+  // Ported from csaf.mjs, function-for-function.
+  // ---------------------------------------------------------------------
+
+  var VALID_STATUS = ['draft', 'final', 'interim'];
+
+  function buildAdvisory(opts) {
+    var event = opts.event, publisherName = opts.publisherName, publisherNamespace = opts.publisherNamespace;
+    var status = opts.status || 'draft';
+    var version = opts.version || '1.0.0';
+    var releaseDate = opts.releaseDate;
+    var revisionSummary = opts.revisionSummary || 'Initial version.';
+
+    var missing = [];
+    if (!event) missing.push('event');
+    if (!publisherName) missing.push('publisherName');
+    if (!publisherNamespace) missing.push('publisherNamespace');
+    if (missing.length) throw new Error('missing: ' + missing.join(', ') + ' — the publisher is not invented');
+    if (VALID_STATUS.indexOf(status) === -1) throw new Error('unknown status: ' + status);
+    if (!/^https?:\/\//.test(publisherNamespace)) throw new Error('publisherNamespace must be a URL: ' + publisherNamespace);
+
+    var date = releaseDate || event.aware_at;
+    var productId = 'PROD-' + (event.product || 'unknown').replace(/[^A-Za-z0-9]+/g, '-').toUpperCase();
+
+    var vuln = { product_status: { known_affected: [productId] } };
+    if (/^CVE-\d{4}-\d{4,}$/.test(event.vuln || '')) {
+      vuln.cve = event.vuln;
+    } else {
+      vuln.ids = [{ system_name: 'vendor', text: event.vuln }];
+    }
+    vuln.notes = [{ category: 'description', title: 'Status', text: event.actively_exploited ? 'Actively exploited.' : 'Exploitation status not confirmed.' }];
+
+    return {
+      document: {
+        category: 'csaf_security_advisory',
+        csaf_version: '2.0',
+        publisher: { category: 'vendor', name: publisherName, namespace: publisherNamespace },
+        title: event.product + ': ' + event.vuln,
+        tracking: {
+          current_release_date: date,
+          id: 'CRA24-' + String(event.id).slice(0, 8).toUpperCase(),
+          initial_release_date: date,
+          revision_history: [{ date: date, number: '1', summary: revisionSummary }],
+          status: status,
+          version: version,
+        },
+        notes: [{
+          category: 'general',
+          title: 'CRA Article 14 awareness',
+          text: 'Awareness established ' + event.aware_at + ' by ' + event.decided_by + '. Source: ' + event.source + '.',
+        }],
+      },
+      product_tree: { full_product_names: [{ product_id: productId, name: event.product }] },
+      vulnerabilities: [vuln],
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Page wiring. Everything below is DOM glue; no network calls anywhere.
+  // ---------------------------------------------------------------------
+
+  function localValueToUtcIso(value) {
+    if (!value) return null;
+    var v = value;
+    if (v.length === 16) v += ':00'; // datetime-local without seconds
+    return v + 'Z'; // the field is labelled UTC; treat the literal value as UTC
+  }
+
+  var awareInput = document.getElementById('aware_at');
+  var remediationInput = document.getElementById('remediation_at');
+  var deadlineError = document.getElementById('deadline-error');
+  var deadlinesOutput = document.getElementById('deadlines-output');
+  var draftsEl = document.getElementById('drafts');
+  var csafButton = document.getElementById('csaf-download');
+  var csafStatus = document.getElementById('csaf-status');
+
+  var fields = ['product', 'vuln', 'source', 'decided_by', 'publisher_name', 'publisher_namespace'];
+  var fieldEls = {};
+  fields.forEach(function (id) { fieldEls[id] = document.getElementById(id); });
+  var activelyExploitedEl = document.getElementById('actively_exploited');
+
+  var eventId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+
+  var lastDeadlines = null; // re-used by the countdown ticker
+  var countdownTimer = null;
+
+  function fmtDuration(ms) {
+    var neg = ms < 0;
+    ms = Math.abs(ms);
+    var totalMin = Math.floor(ms / 60000);
+    var days = Math.floor(totalMin / 1440);
+    var hours = Math.floor((totalMin % 1440) / 60);
+    var mins = totalMin % 60;
+    var parts = [];
+    if (days) parts.push(days + 'd');
+    if (hours || days) parts.push(hours + 'h');
+    parts.push(mins + 'm');
+    return (neg ? 'overdue by ' : '') + parts.join(' ') + (neg ? '' : ' remaining');
+  }
+
+  function renderDeadlines() {
+    var awareIso = localValueToUtcIso(awareInput.value);
+    deadlineError.hidden = true;
+    draftsEl.innerHTML = '';
+
+    if (!awareIso) {
+      lastDeadlines = null;
+      deadlinesOutput.innerHTML = '<p class="muted">Enter an awareness moment above to see your deadlines.</p>';
+      return;
+    }
+
+    var remediationIso = localValueToUtcIso(remediationInput.value);
+    var d;
+    try {
+      d = deadlines(awareIso, remediationIso);
+    } catch (e) {
+      lastDeadlines = null;
+      deadlineError.textContent = e.message;
+      deadlineError.hidden = false;
+      deadlinesOutput.innerHTML = '<p class="muted">Fix the error above to see your deadlines.</p>';
+      return;
+    }
+
+    lastDeadlines = d;
+    var rows = [
+      { key: 'early_warning', title: 'Early warning' },
+      { key: 'detailed', title: 'Detailed assessment' },
+      { key: 'final', title: 'Final report' },
+    ];
+    var html = '';
+    rows.forEach(function (r) {
+      var st = d[r.key];
+      html += '<div class="deadline-row" data-stage="' + st.stage + '">'
+        + '<div><div class="label">' + r.title + ' <span class="muted">(' + st.hours + ' h)</span></div>'
+        + '<div class="muted" style="font-size:.85rem">' + st.what + '</div></div>'
+        + '<div style="text-align:right"><div class="due">' + dueText(st) + '</div>'
+        + '<div class="countdown" data-countdown="' + st.stage + '"></div></div>'
+        + '</div>';
+    });
+    deadlinesOutput.innerHTML = html;
+    renderCountdowns();
+    renderDrafts();
+  }
+
+  function renderCountdowns() {
+    if (!lastDeadlines) return;
+    var now = Date.now();
+    ['early_warning', 'detailed', 'final'].forEach(function (key) {
+      var st = lastDeadlines[key];
+      var el = deadlinesOutput.querySelector('[data-countdown="' + st.stage + '"]');
+      if (!el) return;
+      if (st.pending) {
+        el.textContent = 'pending — starts once the corrective measure is available';
+        el.className = 'countdown pending';
+      } else {
+        var ms = new Date(st.due).getTime() - now;
+        el.textContent = fmtDuration(ms);
+        el.className = 'countdown' + (ms < 0 ? ' overdue' : '');
+      }
+    });
+  }
+
+  function currentEvent() {
+    var awareIso = localValueToUtcIso(awareInput.value);
+    return {
+      id: eventId,
+      product: fieldEls.product.value.trim() || '<<FILL: product name>>',
+      vuln: fieldEls.vuln.value.trim() || '<<FILL: vulnerability identifier / CVE>>',
+      source: fieldEls.source.value.trim() || '<<FILL: source / evidence link>>',
+      decided_by: fieldEls.decided_by.value.trim() || '<<FILL: name of decision maker>>',
+      actively_exploited: !!activelyExploitedEl.checked,
+      aware_at: awareIso ? deadlines(awareIso).aware_at : null,
+    };
+  }
+
+  function copyButtonHandler(text, btn, statusEl) {
+    function done(ok) {
+      statusEl.textContent = ok ? 'Copied.' : 'Copy failed — select the text and copy manually.';
+      statusEl.className = 'status ' + (ok ? 'ok' : 'error');
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { legacyCopy(text, done); });
+    } else {
+      legacyCopy(text, done);
+    }
+  }
+
+  function legacyCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    done(ok);
+  }
+
+  function renderDrafts() {
+    draftsEl.innerHTML = '';
+    if (!lastDeadlines) return;
+    var ev = currentEvent();
+    var remediationIso = localValueToUtcIso(remediationInput.value);
+    var titles = { early: 'Early warning (24 h)', detailed: 'Detailed assessment (72 h)', final: 'Final report (14 days from remediation)' };
+
+    STAGES.forEach(function (stage) {
+      var text = draftFor(ev, stage, remediationIso);
+      var wrap = document.createElement('div');
+      wrap.className = 'draft-box';
+      var h3 = document.createElement('h3');
+      h3.textContent = titles[stage];
+      var pre = document.createElement('pre');
+      pre.textContent = text;
+      var actions = document.createElement('div');
+      actions.className = 'actions';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'small';
+      btn.textContent = 'Copy';
+      var statusEl = document.createElement('span');
+      statusEl.className = 'status';
+      btn.addEventListener('click', function () { copyButtonHandler(text, btn, statusEl); });
+      actions.appendChild(btn);
+      actions.appendChild(statusEl);
+      wrap.appendChild(h3);
+      wrap.appendChild(pre);
+      wrap.appendChild(actions);
+      draftsEl.appendChild(wrap);
+    });
+  }
+
+  function downloadCsaf() {
+    csafStatus.textContent = '';
+    csafStatus.className = 'status';
+
+    var awareIso = localValueToUtcIso(awareInput.value);
+    var missingUi = [];
+    if (!awareIso) missingUi.push('awareness moment (step 1)');
+    if (!fieldEls.product.value.trim()) missingUi.push('product name');
+    if (!fieldEls.vuln.value.trim()) missingUi.push('vulnerability identifier');
+    if (!fieldEls.source.value.trim()) missingUi.push('source / evidence link');
+    if (!fieldEls.decided_by.value.trim()) missingUi.push('assessment made by');
+    if (!fieldEls.publisher_name.value.trim()) missingUi.push('publisher name');
+    if (!fieldEls.publisher_namespace.value.trim()) missingUi.push('publisher namespace');
+
+    if (missingUi.length) {
+      csafStatus.textContent = 'Fill in before downloading: ' + missingUi.join(', ') + '.';
+      csafStatus.className = 'status error';
+      return;
+    }
+
+    var ev = {
+      id: eventId,
+      product: fieldEls.product.value.trim(),
+      vuln: fieldEls.vuln.value.trim(),
+      source: fieldEls.source.value.trim(),
+      decided_by: fieldEls.decided_by.value.trim(),
+      actively_exploited: !!activelyExploitedEl.checked,
+      aware_at: deadlines(awareIso).aware_at,
+    };
+
+    var doc;
+    try {
+      doc = buildAdvisory({
+        event: ev,
+        publisherName: fieldEls.publisher_name.value.trim(),
+        publisherNamespace: fieldEls.publisher_namespace.value.trim(),
+        status: 'draft',
+        version: '1.0.0',
+      });
+    } catch (e) {
+      csafStatus.textContent = e.message;
+      csafStatus.className = 'status error';
+      return;
+    }
+
+    var blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'CRA24-' + String(eventId).slice(0, 8) + '-csaf.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+
+    csafStatus.textContent = 'Downloaded. Generated in your browser; nothing was sent anywhere.';
+    csafStatus.className = 'status ok';
+  }
+
+  awareInput.addEventListener('input', renderDeadlines);
+  remediationInput.addEventListener('input', renderDeadlines);
+  fields.forEach(function (id) { fieldEls[id].addEventListener('input', renderDrafts); });
+  activelyExploitedEl.addEventListener('change', renderDrafts);
+  csafButton.addEventListener('click', downloadCsaf);
+
+  countdownTimer = setInterval(renderCountdowns, 30000);
+
+  renderDeadlines();
+})();
+</script>
+</body>
+</html>
