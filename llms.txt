@@ -1,0 +1,61 @@
+# CRA 24h Clock
+
+> A single-file, offline command-line tool that computes the EU Cyber Resilience Act
+> Article 14 reporting deadlines from your moment of awareness, drafts the ENISA/CSIRT
+> notifications, and exports a CSAF 2.0 advisory. Runs entirely on your machine. No account,
+> no network, no data leaves your computer. MIT licensed.
+
+## What this answers
+
+From **11 September 2026**, Article 14 of Regulation (EU) 2024/2847 (Cyber Resilience Act)
+obliges manufacturers of products with digital elements to report an **actively exploited
+vulnerability** and **severe incidents**:
+
+- **24 hours** — early warning to the coordinating CSIRT and ENISA
+- **72 hours** — vulnerability notification with a more detailed assessment and corrective measures
+- **14 days** — final report, counted from the moment a corrective measure becomes available
+
+Two details cause most of the mistakes:
+
+1. **The clock starts at awareness, not at confirmation.** The question an authority asks after
+   an incident is "when exactly did you become aware?" — and the burden of answering it defensibly
+   is on the manufacturer.
+2. **The 14-day final-report clock does not start at awareness.** It starts when a corrective
+   measure or mitigation becomes available. Until that exists, the deadline cannot be computed.
+   This tool refuses to invent that date rather than displaying a plausible wrong one.
+
+The obligation covers products **already on the market**, not only new releases.
+
+## Pages
+
+- [CRA 24h Clock — overview](https://sisuthros.github.io/cra24-clock/): what the tool does, how the deadlines are derived, and the legal basis
+- [Deadline tool](https://sisuthros.github.io/cra24-clock/tool.html): enter the moment of awareness, get the 24h/72h/14d deadlines
+- [Readiness assessment](https://sisuthros.github.io/cra24-clock/assess.html): questionnaire that scores whether you could actually meet a 24-hour deadline today
+- [CRA in Finnish / kyberkestävyyssäädös](https://sisuthros.github.io/cra24-clock/cra-suomi.html): Finnish-language explanation, Traficom and ENISA reporting routes, authorised-representative registration
+- [Incident intake](https://sisuthros.github.io/cra24-clock/intake.html): structured intake for recording an incident and its awareness timestamp
+
+## Source and package
+
+- Source: https://github.com/Sisuthros/cra24-clock (MIT)
+- CLI entry point: `cra-clock.mjs` — requires Node.js 18+, no install step
+- Deadline computation: `node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z`
+- With a known remediation date: `node cra-clock.mjs deadlines --aware <ISO> --remediation <ISO>`
+- CSAF 2.0 advisory export: `csaf.mjs`
+- Tests: `cra-clock.test.mjs`
+
+## Why offline matters here
+
+Incident timing data is among the most sensitive material a manufacturer holds: it establishes
+when the company knew, which is the fact that regulatory exposure turns on. This tool performs no
+network requests. Nothing is uploaded, and there is no service to trust. That is a deliberate
+design constraint, and it is checkable — the tool is a single readable file.
+
+## Known limitation
+
+ENISA's Single Reporting Platform is a manual web form with no public API. This tool prepares the
+content of the notification and the evidence of timing; the submission itself is still a human
+step, and proving you submitted exactly once remains a manual problem.
+
+## Optional
+
+- [Guidance and hands-on setup](https://sisuthros.github.io/cra24-clock/assess.html): for teams that want the readiness assessment reviewed and the reporting process put in place rather than only the calculator
