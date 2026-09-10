@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRA Article 14 Readiness Check: are you in scope, and can you report in 24 hours?</title>
+<meta name="description" content="Free 3-minute self-assessment for the EU Cyber Resilience Act Article 14, which applies from 11 September 2026. Find out if you are in scope, which obligations bind you, and score your 24h/72h/14d reporting readiness. Runs entirely in your browser; nothing leaves your machine.">
+<meta property="og:title" content="CRA Article 14 Readiness Check">
+<meta property="og:description" content="The EU Cyber Resilience Act 24-hour reporting duty applies from 11 September 2026. Check your scope and readiness in 3 minutes, in your browser.">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #9da7b3; --accent: #4cc38a; --warn: #e5534b; --amber: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  h1 { font-size: 1.8rem; line-height: 1.25; margin: 1rem 0 .5rem; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 .75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; }
+  p, li { color: var(--text); }
+  .muted { color: var(--muted); }
+  a { color: #58a6ff; }
+  .badge { display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+           padding: .1rem .6rem; font-size: .8rem; color: var(--muted); margin-right: .4rem; }
+  .box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+  .q { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; margin: .7rem 0; }
+  .q .label { font-weight: 600; }
+  .q .hint { color: var(--muted); font-size: .9rem; margin: .25rem 0 .6rem; }
+  .opts { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .opts label { flex: 1 1 6rem; text-align: center; border: 1px solid var(--border); border-radius: 6px;
+                padding: .4rem .3rem; cursor: pointer; user-select: none; font-size: .95rem; }
+  .opts input { display: none; }
+  .opts input:checked + span { font-weight: 700; }
+  .opts label:has(input:checked) { border-color: var(--accent); background: #12261c; }
+  .opts label.no:has(input:checked) { border-color: var(--warn); background: #2a1615; }
+  .opts label.partial:has(input:checked) { border-color: var(--amber); background: #2a2410; }
+  button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px;
+           border: 1px solid var(--border); background: var(--accent); color: #06231a; padding: .7rem 1.4rem; }
+  button.ghost { background: transparent; color: var(--text); }
+  .cta { display: inline-block; margin: .3rem .5rem .3rem 0; }
+  .price { font-size: 1.5rem; font-weight: 700; }
+  .meter { height: 14px; background: #21262d; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .meter > span { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+  .verdict { font-size: 1.35rem; font-weight: 700; margin: .4rem 0; }
+  .gap { border-left: 3px solid var(--warn); padding: .2rem 0 .2rem .7rem; margin: .5rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; margin: .5rem 0; }
+  td, th { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  .hidden { display: none; }
+  footer { margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1rem;
+           font-size: .85rem; color: var(--muted); }
+  .clock { font-size: 1.1rem; font-weight: 600; color: var(--amber); }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="muted"><span class="badge">EU Cyber Resilience Act</span><span class="badge">Article 14</span><span class="badge">applies from 11 September 2026</span></p>
+
+  <h1>Are you in scope for the CRA 24-hour reporting duty, and could you actually report in time?</h1>
+
+  <p id="clockline" class="clock"></p>
+
+  <p>From <strong>11 September 2026</strong>, Article 14 of the EU Cyber Resilience Act
+  (Regulation (EU) 2024/2847) obliges manufacturers of products with digital elements to report an
+  <strong>actively exploited vulnerability</strong> or a <strong>severe incident affecting product
+  security</strong> to ENISA and their coordinating CSIRT: an <strong>early warning within 24 hours</strong>
+  of becoming aware, a fuller <strong>notification within 72 hours</strong>, and a final report later.
+  The clock starts at <em>awareness</em>, and it covers products you already shipped, not only new ones.
+  Penalties reach <strong>&euro;15 million or 2.5% of worldwide turnover</strong>.</p>
+
+  <p>This is a free 3-minute self-check. Answer honestly; it computes entirely in your browser and
+  <strong>nothing you enter leaves your machine</strong>. It is informational, not legal advice.</p>
+
+  <h2>1. Are you in scope?</h2>
+
+  <div class="q" data-scope="true">
+    <div class="label">Do you develop or manufacture a product with digital elements (software, or hardware that contains software) that is made available on the EU market under your name or trademark?</div>
+    <div class="hint">If you only use, distribute or import someone else's product, your duties differ and are narrower. This check is written for manufacturers.</div>
+    <div class="opts">
+      <label class="yes"><input type="radio" name="scope_mfr" value="yes"><span>Yes</span></label>
+      <label class="no"><input type="radio" name="scope_mfr" value="no"><span>No</span></label>
+    </div>
+  </div>
+
+  <div class="q" data-scope="true">
+    <div class="label">Is the product still supported or on the market (i.e. not fully withdrawn and end-of-support before 11 September 2026)?</div>
+    <div class="hint">Article 14 binds products already on the market, not only new ones. There is no duty to report exploitation you already knew about before 11 September 2026.</div>
+    <div class="opts">
+      <label class="yes"><input type="radio" name="scope_market" value="yes"><span>Yes</span></label>
+      <label class="no"><input type="radio" name="scope_market" value="no"><span>No</span></label>
+    </div>
+  </div>
+
+  <h2>2. Could you meet the obligation today?</h2>
+  <p class="muted">Rate each capability. "Partial" means it exists but is informal, undocumented, or untested.</p>
+
+  <div id="dims"></div>
+
+  <p style="margin-top:1.5rem">
+    <button id="run">Show my result</button>
+    <button id="reset" class="ghost">Reset</button>
+  </p>
+
+  <section id="result" class="hidden">
+    <h2 id="rtitle">Your CRA Article 14 readiness</h2>
+
+    <div class="box">
+      <div id="scopeVerdict" class="verdict"></div>
+      <div class="meter"><span id="bar"></span></div>
+      <p><span id="scorePct" class="price"></span> <span class="muted">reporting readiness</span></p>
+      <p id="tierMsg"></p>
+    </div>
+
+    <div id="gaps"></div>
+
+    <div class="box">
+      <h3 style="margin-top:0">Share your result</h3>
+      <p class="muted">Copy a one-line summary (no answers, no data, just the score) to post or send to your team.</p>
+      <p id="shareText" style="font-style:italic"></p>
+      <button id="copyShare" class="ghost">Copy summary</button> <span id="copied" class="muted"></span>
+    </div>
+
+    <h3>Close the gaps before the clock starts on you</h3>
+    <div class="box">
+      <p><strong>Free:</strong> the moment you become aware of an exploited vulnerability, you need the
+      three deadlines and pre-filled drafts in seconds, not a spreadsheet.
+      <a href="tool.html"><strong>Open the free browser deadline &amp; notification tool &rarr;</strong></a>
+      It computes the 24h / 72h / 14d dates, drafts the early warning and 72h notification, and exports a
+      CSAF 2.0 advisory, entirely on your machine.</p>
+      <table>
+        <tr>
+          <th>The reporting kit</th>
+          <td>Editable notification templates, an ENISA Single Reporting Platform submission playbook, a
+          decision-log template, and a worked example, so the first person on call can send a defensible
+          24-hour warning without waiting for legal.</td>
+          <td class="price" style="white-space:nowrap">490 &euro;<br><a class="muted" href="https://buy.stripe.com/cNieVd2qt8dya9pa85ak009">Pay with Stripe &rarr;</a></td>
+        </tr>
+        <tr>
+          <th>Kept current</th>
+          <td>The kit plus updates as ENISA's platform and guidance change through the first year of the regime.</td>
+          <td class="price" style="white-space:nowrap">99 &euro;/mo<br><a class="muted" href="https://buy.stripe.com/14AbJ18ORgK481h6VTak00a">Subscribe &rarr;</a></td>
+        </tr>
+      </table>
+      <p class="muted">Before you pay, write to
+      <a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a> with what you make and
+      we will tell you honestly whether the kit fits your situation.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p><a href="index.html">&larr; CRA 24h Clock</a> &middot;
+    <a href="tool.html">Free deadline tool</a> &middot;
+    Same responsible party as the main project
+    (<a href="mailto:viltsu.myllyniemi@gmail.com">viltsu.myllyniemi@gmail.com</a>).</p>
+    <p>This self-assessment is informational and is not legal advice. It does not send, store or transmit
+    anything; all logic runs in your browser. Confirm every obligation against the official text of
+    Regulation (EU) 2024/2847 and guidance from ENISA and your national CSIRT. Deadlines and triggers are
+    summarised from Article 14; penalties from Article 64; the timeline from Article 71.</p>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  // Countdown / in-force line.
+  var applies = new Date("2026-09-11T00:00:00Z");
+  var now = new Date();
+  var clockEl = document.getElementById("clockline");
+  var dayMs = 86400000;
+  if (now >= applies) {
+    clockEl.textContent = "The reporting duty is in force now (since 11 September 2026). The 24-hour clock does not wait for you to get ready.";
+  } else {
+    var days = Math.ceil((applies - now) / dayMs);
+    clockEl.textContent = days + (days === 1 ? " day" : " days") + " until the reporting duty applies (11 September 2026).";
+  }
+
+  // Readiness dimensions, each tied to a concrete Article 14 capability.
+  var DIMS = [
+    { key: "detect_vuln", label: "Can you learn that a vulnerability in your product is being actively exploited in the wild?",
+      hint: "Monitoring, a security contact, a way for researchers or customers to reach you." },
+    { key: "detect_incident", label: "Would you detect a severe incident that impacts the security of your product?",
+      hint: "Telemetry, alerting, or a defined incident-detection process." },
+    { key: "timestamp", label: "Do you record the moment of awareness in a way you could defend to a regulator?",
+      hint: "A timestamped, tamper-evident record, not a scroll-back through chat." },
+    { key: "runbook_24h", label: "Is there a written procedure to send the 24-hour early warning?",
+      hint: "Who writes it, who approves it, how it is sent, tested at least once." },
+    { key: "enisa_access", label: "Can you access the ENISA Single Reporting Platform (registered, or know how to)?",
+      hint: "Reports go through this single platform; the 24-hour clock does not stop for onboarding." },
+    { key: "know_csirt", label: "Do you know which national CSIRT is your coordinator for reporting?",
+      hint: "The report goes to the coordinating CSIRT and ENISA simultaneously." },
+    { key: "owner", label: "Is a specific person or role accountable for reporting, reachable out of hours?",
+      hint: "An exploited-vulnerability report can be due on a weekend." },
+    { key: "followups", label: "Could you produce the 72-hour notification and the final report?",
+      hint: "The final report is due within 14 days of a corrective measure for an exploited vulnerability." },
+    { key: "csaf", label: "Can you issue a machine-readable advisory (e.g. CSAF 2.0) to your users?",
+      hint: "Increasingly expected alongside the regulatory report." },
+    { key: "notify_users", label: "Can you inform affected users about the vulnerability and any corrective measures?",
+      hint: "Article 14 pairs regulator reporting with user information duties." }
+  ];
+
+  var dimsEl = document.getElementById("dims");
+  DIMS.forEach(function (d) {
+    var q = document.createElement("div");
+    q.className = "q";
+    q.innerHTML =
+      '<div class="label">' + d.label + '</div>' +
+      '<div class="hint">' + d.hint + '</div>' +
+      '<div class="opts">' +
+        '<label class="yes"><input type="radio" name="' + d.key + '" value="1"><span>Yes</span></label>' +
+        '<label class="partial"><input type="radio" name="' + d.key + '" value="0.5"><span>Partial</span></label>' +
+        '<label class="no"><input type="radio" name="' + d.key + '" value="0"><span>No</span></label>' +
+      '</div>';
+    dimsEl.appendChild(q);
+  });
+
+  function val(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : null;
+  }
+
+  document.getElementById("run").addEventListener("click", function () {
+    var mfr = val("scope_mfr");
+    var market = val("scope_market");
+    var result = document.getElementById("result");
+    var scopeVerdict = document.getElementById("scopeVerdict");
+    var tierMsg = document.getElementById("tierMsg");
+    var gapsEl = document.getElementById("gaps");
+    result.classList.remove("hidden");
+
+    var inScope = (mfr === "yes" && market === "yes");
+    gapsEl.innerHTML = "";
+
+    if (mfr === "no") {
+      scopeVerdict.innerHTML = '<span style="color:var(--muted)">Likely limited or out of scope as a manufacturer.</span>';
+      tierMsg.textContent = "Article 14's manufacturer reporting duty is written for those who place a product with digital elements on the EU market under their own name. Distributors, importers and users have narrower duties. If you are unsure which role you hold, treat it as a scoping question for counsel.";
+      document.getElementById("bar").style.width = "0%";
+      document.getElementById("scorePct").textContent = "n/a";
+      document.getElementById("shareText").textContent = "I checked my EU Cyber Resilience Act Article 14 scope with a free 3-minute tool. Worth 3 minutes before 11 September 2026.";
+      result.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (market === "no") {
+      scopeVerdict.innerHTML = '<span style="color:var(--muted)">Possibly out of scope for products fully withdrawn before 11 September 2026.</span>';
+      tierMsg.textContent = "There is no duty to report exploitation you were already aware of before 11 September 2026, and fully end-of-life products may fall away. But any product still supported or on the market is in scope. Re-run this for each product line you still ship.";
+    } else {
+      scopeVerdict.innerHTML = '<span style="color:var(--warn)">In scope: you are a manufacturer with a product on the EU market.</span>';
+    }
+
+    // Score across the ten capabilities.
+    var total = 0, answered = 0, gaps = [];
+    DIMS.forEach(function (d) {
+      var v = val(d.key);
+      if (v === null) return;
+      answered++;
+      total += parseFloat(v);
+      if (v === "0") gaps.push({ label: d.label, level: "missing" });
+      else if (v === "0.5") gaps.push({ label: d.label, level: "partial" });
+    });
+
+    var pct = answered ? Math.round((total / DIMS.length) * 100) : 0;
+    document.getElementById("bar").style.width = pct + "%";
+    document.getElementById("bar").style.background =
+      pct >= 75 ? "var(--accent)" : pct >= 40 ? "var(--amber)" : "var(--warn)";
+    document.getElementById("scorePct").textContent = pct + "%";
+
+    var tier;
+    if (answered < DIMS.length) {
+      tier = "Answer all ten capability questions for a full score. On what you answered, ";
+    } else { tier = ""; }
+
+    if (pct >= 75) {
+      tierMsg.textContent = tier + "you are in reasonable shape. Close the remaining gaps and rehearse the 24-hour path once, end to end, before you need it.";
+    } else if (pct >= 40) {
+      tierMsg.textContent = tier + "you have pieces but not a path. If an exploited vulnerability surfaced this week, the 24-hour warning would be a scramble. Fix the missing items below first.";
+    } else {
+      tierMsg.textContent = tier + "there is no working reporting path today. The 24-hour clock starts at awareness whether or not you are ready. Start with the missing items below.";
+    }
+
+    if (gaps.length) {
+      var h = document.createElement("div");
+      h.innerHTML = "<h3>Your priority gaps</h3>";
+      gaps.sort(function (a, b) { return (a.level === "missing" ? 0 : 1) - (b.level === "missing" ? 0 : 1); });
+      gaps.forEach(function (g) {
+        var d = document.createElement("div");
+        d.className = "gap";
+        d.innerHTML = "<strong>" + (g.level === "missing" ? "Missing" : "Only partial") + ":</strong> " + g.label;
+        h.appendChild(d);
+      });
+      gapsEl.appendChild(h);
+    }
+
+    var verdictWord = pct >= 75 ? "in reasonable shape" : pct >= 40 ? "partly ready" : "not ready yet";
+    document.getElementById("shareText").textContent =
+      "I scored " + pct + "% ready for the EU Cyber Resilience Act 24-hour reporting duty (Article 14, live 11 Sep 2026) and I'm " + verdictWord + ". Free 3-minute check, runs in your browser.";
+
+    result.scrollIntoView({ behavior: "smooth" });
+  });
+
+  document.getElementById("reset").addEventListener("click", function () {
+    document.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = false; });
+    document.getElementById("result").classList.add("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  document.getElementById("copyShare").addEventListener("click", function () {
+    var txt = document.getElementById("shareText").textContent;
+    var done = document.getElementById("copied");
+    function ok() { done.textContent = "Copied."; setTimeout(function () { done.textContent = ""; }, 2500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(ok, function () { done.textContent = "Select and copy the line above."; });
+    } else {
+      done.textContent = "Select and copy the line above.";
+    }
+  });
+})();
+</script>
+</body>
+</html>
