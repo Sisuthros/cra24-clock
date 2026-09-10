@@ -1,0 +1,50 @@
+{
+  "name": "cra-article14-clock",
+  "version": "1.0.0",
+  "description": "EU Cyber Resilience Act (CRA) Article 14 reporting clock: compute the 24h/72h/14d deadlines from your moment of awareness, draft the ENISA/CSIRT early-warning, 72h notification and final report, and export a CSAF 2.0 advisory. Runs on your machine, no network, no data leaves your computer.",
+  "type": "module",
+  "bin": {
+    "cra-clock": "./cra-clock.mjs"
+  },
+  "main": "cra-clock.mjs",
+  "scripts": {
+    "test": "node cra-clock.test.mjs"
+  },
+  "keywords": [
+    "cra",
+    "cyber-resilience-act",
+    "article-14",
+    "eu-cra",
+    "vulnerability-reporting",
+    "vulnerability-disclosure",
+    "enisa",
+    "csirt",
+    "csaf",
+    "compliance",
+    "regulation-2024-2847",
+    "product-security",
+    "incident-reporting",
+    "24-hour-reporting",
+    "deadline",
+    "security"
+  ],
+  "author": "Ville Myllyniemi <viltsu.myllyniemi@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://sisuthros.github.io/cra24-clock/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sisuthros/cra24-clock.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sisuthros/cra24-clock/issues"
+  },
+  "files": [
+    "cra-clock.mjs",
+    "csaf.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
