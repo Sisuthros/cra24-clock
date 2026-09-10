@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sisuthros.github.io/cra24-clock/sitemap.xml
