@@ -19,6 +19,12 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://sisuthros.github.io/cra24-clock/cra-suomi.html</loc>
+    <lastmod>2026-09-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://sisuthros.github.io/cra24-clock/intake.html</loc>
     <lastmod>2026-09-10</lastmod>
     <changefreq>monthly</changefreq>
