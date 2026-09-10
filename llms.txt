@@ -26,6 +26,32 @@ Two details cause most of the mistakes:
 
 The obligation covers products **already on the market**, not only new releases.
 
+## Who is in scope today, and who is not
+
+This is the most frequently confused point, and getting it wrong in either direction is costly.
+
+**Manufacturers of products with digital elements: in scope from 11 September 2026.** The Article
+14 reporting duties — 24-hour early warning, 72-hour notification, 14-day final report — apply
+from that date, and they cover products already placed on the market.
+
+**Open-source software stewards: not yet.** Article 24(3) of the CRA extends the Article 14(1),
+(3) and (8) reporting obligations to open-source software stewards under certain circumstances,
+but under Article 71(2) **Article 24(3) applies only from 11 December 2027**. A steward who is not
+otherwise acting as a manufacturer does not acquire a 24-hour reporting duty in September 2026.
+
+Source: the European Commission's *FAQs on the Cyber Resilience Act*, section 5.5, added on
+4 September 2026 — https://digital-strategy.ec.europa.eu/en/library/cyber-resilience-act-implementation-frequently-asked-questions
+(community-maintained rendering: https://cra.orcwg.org/faq/official/faq_5-5/). The Commission
+states explicitly that this FAQ is prepared by Commission services, is not authoritative, and does
+not extend or reduce obligations deriving from the legislation. Treat it as guidance, not law.
+
+Note also that the bulk of the CRA applies from 11 December 2027. Article 14 reporting is the
+early obligation, fifteen months ahead of the rest — which is precisely why it catches people.
+
+If you are unsure which of the two you are, the readiness assessment linked below starts by
+establishing whether the obligation applies to you at all, and will tell you plainly when the
+answer is that it does not.
+
 ## Pages
 
 - [CRA 24h Clock — overview](https://sisuthros.github.io/cra24-clock/): what the tool does, how the deadlines are derived, and the legal basis
