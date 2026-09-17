@@ -92,7 +92,7 @@
 
   <p class="muted"><span class="badge">EU Cyber Resilience Act</span><span class="badge">Article 14</span><span class="badge">applies from 11 September 2026</span></p>
 
-  <p class="muted">🇫🇮 <a href="cra-suomi.html">Suomeksi: kyberkestävyyssäädöksen (CRA) 24 tunnin ilmoitusvelvollisuus &rarr;</a></p>
+  <p class="muted"><a href="cra-suomi.html">Finland: Traficom / NCSC-FI reporting route for CRA Article 14 &rarr;</a></p>
 
   <h1>When the regulator asks <em>"when exactly did you become aware?"</em>, you will have one defensible answer, not a Slack scroll-back.</h1>
 
@@ -122,10 +122,10 @@
   <h2 id="try">Run it right now</h2>
 
   <pre><code><span class="k">node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z</span>
-Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
-   24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
-   72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
-  336 h  ei vielä laskettavissa (aikaisintaan 2026-09-25T08:00:00.000Z, alkaa korjauksen saatavillaolosta)  Loppuraportti. Määräaika alkaa vasta kun korjaava toimi on saatavilla, joten sitä ei voi vielä laskea.</code></pre>
+Awareness began: 2026-09-11T08:00:00.000Z
+   24 h  2026-09-12T08:00:00.000Z  Early warning to ENISA and the coordinating CSIRT
+   72 h  2026-09-14T08:00:00.000Z  More detailed assessment, corrective measures
+  336 h  not yet computable (earliest 2026-09-25T08:00:00.000Z, starts when remediation is available)  Final report. The deadline starts only when a corrective measure is available, so it cannot be computed yet.</code></pre>
 
   <p>Look at the third line. The tool <strong>refuses to give you a final-report date</strong>
   it cannot know. Article 14 ties that deadline to the moment a corrective measure becomes
@@ -136,18 +136,14 @@ Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
   <p>Record it and the clock starts:</p>
 
   <pre><code><span class="k">node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z --remediation 2026-10-01T08:00:00Z</span>
-Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
-Korjaus saatavilla: 2026-10-01T08:00:00.000Z
-   24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
-   72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
-  336 h  2026-10-15T08:00:00.000Z  Loppuraportti korjaavan toimen tultua saataville</code></pre>
+Awareness began: 2026-09-11T08:00:00.000Z
+Remediation available: 2026-10-01T08:00:00.000Z
+   24 h  2026-09-12T08:00:00.000Z  Early warning to ENISA and the coordinating CSIRT
+   72 h  2026-09-14T08:00:00.000Z  More detailed assessment, corrective measures
+  336 h  2026-10-15T08:00:00.000Z  Final report after a corrective measure became available</code></pre>
 
   <p>The first two deadlines do not move. The third one does, because the regulation says so.</p>
-
-  <p class="muted">That is the tool's real, unedited output. It currently speaks Finnish
-  (the developer is Finnish); the evidence log and the CSAF 2.0 export are language-neutral JSON.
-  English CLI output is on the roadmap and is not promised for a date.
-  Requires Node.js 18+. No install step, no network access, no account.</p>
+  <p>Requires Node.js 18+. No install step, no network access, no account.</p>
 
   <h2 id="why">Why a regulator-proof log, not a form-filler</h2>
 

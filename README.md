@@ -22,10 +22,10 @@ node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z
 ```
 
 ```
-Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
-   24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
-   72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
-  336 h  ei vielä laskettavissa (aikaisintaan 2026-09-25T08:00:00.000Z, alkaa korjauksen saatavillaolosta)  Loppuraportti. Määräaika alkaa vasta kun korjaava toimi on saatavilla, joten sitä ei voi vielä laskea.
+Awareness began: 2026-09-11T08:00:00.000Z
+   24 h  2026-09-12T08:00:00.000Z  Early warning to ENISA and the coordinating CSIRT
+   72 h  2026-09-14T08:00:00.000Z  More detailed assessment, corrective measures
+  336 h  not yet computable (earliest 2026-09-25T08:00:00.000Z, starts when remediation is available)  Final report. The deadline starts only when a corrective measure is available, so it cannot be computed yet.
 ```
 
 The final-report clock does not start at awareness: it starts when a corrective
@@ -37,15 +37,12 @@ node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z --remediation 2026-10-
 ```
 
 ```
-Tietoisuus alkoi: 2026-09-11T08:00:00.000Z
-Korjaus saatavilla: 2026-10-01T08:00:00.000Z
-   24 h  2026-09-12T08:00:00.000Z  Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille
-   72 h  2026-09-14T08:00:00.000Z  Tarkempi arvio, korjaavat toimet
-  336 h  2026-10-15T08:00:00.000Z  Loppuraportti korjaavan toimen tultua saataville
+Awareness began: 2026-09-11T08:00:00.000Z
+Remediation available: 2026-10-01T08:00:00.000Z
+   24 h  2026-09-12T08:00:00.000Z  Early warning to ENISA and the coordinating CSIRT
+   72 h  2026-09-14T08:00:00.000Z  More detailed assessment, corrective measures
+  336 h  2026-10-15T08:00:00.000Z  Final report after a corrective measure became available
 ```
-
-The CLI currently speaks Finnish; the evidence log and the CSAF 2.0 export are
-language-neutral JSON. English CLI output is on the roadmap and is not promised for a date.
 
 ## Commands
 
@@ -96,5 +93,4 @@ Business customers only.
 
 MIT — see [`LICENSE`](LICENSE).
 
-Built by Ville Myllyniemi (Larnaca, Cyprus) with an AI agent family; a human reads and
-publishes everything here.
+Built by Ville Myllyniemi (Larnaca, Cyprus).

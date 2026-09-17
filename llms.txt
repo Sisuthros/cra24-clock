@@ -57,7 +57,7 @@ answer is that it does not.
 - [CRA 24h Clock — overview](https://sisuthros.github.io/cra24-clock/): what the tool does, how the deadlines are derived, and the legal basis
 - [Deadline tool](https://sisuthros.github.io/cra24-clock/tool.html): enter the moment of awareness, get the 24h/72h/14d deadlines
 - [Readiness assessment](https://sisuthros.github.io/cra24-clock/assess.html): questionnaire that scores whether you could actually meet a 24-hour deadline today
-- [CRA in Finnish / kyberkestävyyssäädös](https://sisuthros.github.io/cra24-clock/cra-suomi.html): Finnish-language explanation, Traficom and ENISA reporting routes, authorised-representative registration
+- [CRA reporting in Finland](https://sisuthros.github.io/cra24-clock/cra-suomi.html): Traficom / NCSC-FI route, authorised-representative registration, ENISA SRP
 - [Incident intake](https://sisuthros.github.io/cra24-clock/intake.html): structured intake for recording an incident and its awareness timestamp
 
 ## Source and package

@@ -2,40 +2,41 @@
 'use strict';
 
 /**
- * cra-clock.mjs — CRA 14 artiklan kello ja todisteketju.
+ * cra-clock.mjs — CRA Article 14 clock and evidence chain.
  *
- * MIKÄ ONGELMA: 11.9.2026 alkaen EU-valmistajan on ilmoitettava aktiivisesti
- * hyväksikäytetystä haavoittuvuudesta ENISAlle ja koordinoivalle CSIRTille
- * 24 tunnissa, annettava tarkempi arvio 72 tunnissa ja loppuraportti 14
- * vuorokaudessa. Velvoite koskee myös tuotteita jotka on jo myyty.
+ * THE PROBLEM: from 11 September 2026, an EU manufacturer must report an
+ * actively exploited vulnerability to ENISA and the coordinating CSIRT
+ * within 24 hours, give a more detailed assessment within 72 hours, and a
+ * final report within 14 days. The duty also covers products already sold.
  *
- * Kello alkaa TIETOISUUDESTA, ei varmistuksesta. Valvoja kysyy jälkikäteen
- * kolme asiaa, ja kaikki kolme ovat todistuskysymyksiä:
- *   1. Milloin tarkalleen tulitte tietoisiksi?
- *   2. Kuka päätti että kyseessä on aktiivinen hyväksikäyttö?
- *   3. Lähtikö ilmoitus tasan kerran?
+ * The clock starts at AWARENESS, not confirmation. After the fact, a
+ * supervisor asks three things, all of them evidence questions:
+ *   1. When exactly did you become aware?
+ *   2. Who decided this was active exploitation?
+ *   3. Did the notification go out exactly once?
  *
- * ENISAn Single Reporting Platformilla ei ole rajapintaa, joten lähetys ja
- * uudelleenyritys ovat ihmisen käsissä. Silloin tuplailmoitus on todellinen
- * riski, ja niin on myös aikaleima jota ei voi puolustaa.
+ * ENISA's Single Reporting Platform has no API, so submit and retry are
+ * human steps. Duplicate notification is a real risk, and so is a timestamp
+ * you cannot defend.
  *
- * MITÄ TÄMÄ TEKEE: kirjaa tietoisuushetken, laskee kolme määräaikaa, tuottaa
- * esitäytetyt luonnokset, ja pitää hash-ketjutettua lokia jota ei voi muokata
- * jälkikäteen huomaamatta. Lähetys merkitään TASAN KERRAN vaiheessa.
+ * WHAT THIS DOES: records the awareness moment, computes the three
+ * deadlines, produces pre-filled drafts, and keeps a hash-chained log that
+ * cannot be edited after the fact without detection. A submission is marked
+ * EXACTLY ONCE per stage.
  *
- * MITÄ TÄMÄ EI TEE: ei lähetä mitään viranomaiselle, ei päätä puolestasi onko
- * haavoittuvuus aktiivisesti hyväksikäytetty, ei ole oikeudellinen neuvo eikä
- * skannaa koodia. Kaikki data pysyy omalla koneella.
+ * WHAT THIS DOES NOT DO: it does not send anything to an authority, does
+ * not decide for you whether a vulnerability is actively exploited, is not
+ * legal advice, and does not scan code. All data stays on your machine.
  *
- * Käyttö:
+ * Usage:
  *   node cra-clock.mjs deadlines --aware 2026-09-11T08:00:00Z
- *   node cra-clock.mjs aware --product "Acme FW" --vuln CVE-2026-1234 --source <url> --decided-by "nimi"
+ *   node cra-clock.mjs aware --product "Acme FW" --vuln CVE-2026-1234 --source <url> --decided-by "name"
  *   node cra-clock.mjs draft  --id <id> --stage early|detailed|final
  *   node cra-clock.mjs submitted --id <id> --stage early --ref SRP-123
  *   node cra-clock.mjs status [--json]
  *   node cra-clock.mjs verify
  *
- * Exit: 0 = ok · 1 = ketju rikki tai tuplalähetys estetty · 2 = käyttövirhe
+ * Exit: 0 = ok · 1 = chain broken or duplicate submit blocked · 2 = usage error
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -55,53 +56,52 @@ const flag = (n, d = null) => { const i = argv.indexOf(`--${n}`); return i >= 0 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
 /**
- * CRA 14 art. kaskadi. Puhdas funktio: sama syöte, sama tulos, aina.
+ * CRA Article 14 cascade. Pure function: same input, same output, always.
  *
- * Kaksi ensimmäistä määräaikaa lasketaan tietoisuudesta. Loppuraportti EI:
- * asetus sitoo sen siihen hetkeen jolloin korjaava toimi on saatavilla.
- * Niin kauan kuin sitä hetkeä ei tiedetä, määräaikaa ei ole olemassa, ja
- * työkalu sanoo sen sellaisenaan sen sijaan että keksisi päivämäärän.
+ * The first two deadlines are counted from awareness. The final report is
+ * not: the regulation ties it to the moment a corrective measure becomes
+ * available. Until that moment is known, the deadline does not exist, and
+ * the tool says so rather than inventing a date.
  *
- * Korjattu 2026-09-04: aiemmin `final.due` oli tietoisuus + 336 h. Se antoi
- * aina liian aikaisen määräajan silloin kun korjaus valmistui myöhemmin kuin
- * 14 vrk tietoisuudesta, ja se on juuri se virhe jonka estämiseksi tämä
- * työkalu on olemassa.
+ * Fixed 2026-09-04: previously `final.due` was awareness + 336 h. That
+ * always produced too early a deadline when the fix landed later than
+ * 14 days after awareness, which is the exact error this tool exists to stop.
  */
 export function deadlines(awareIso, remediationIso = null) {
   const t = new Date(awareIso).getTime();
-  if (Number.isNaN(t)) throw new Error(`aikaleima ei jäsenny: ${awareIso}`);
+  if (Number.isNaN(t)) throw new Error(`timestamp does not parse: ${awareIso}`);
   const at = (base, h) => new Date(base + h * 3600_000).toISOString();
 
   let r = null;
   if (remediationIso != null && remediationIso !== '') {
     r = new Date(remediationIso).getTime();
-    if (Number.isNaN(r)) throw new Error(`korjauksen aikaleima ei jäsenny: ${remediationIso}`);
-    if (r < t) throw new Error('korjaus ei voi olla saatavilla ennen kuin tietoisuus alkoi');
+    if (Number.isNaN(r)) throw new Error(`remediation timestamp does not parse: ${remediationIso}`);
+    if (r < t) throw new Error('remediation cannot be available before awareness began');
   }
 
   return {
     aware_at: new Date(t).toISOString(),
     remediation_available_at: r === null ? null : new Date(r).toISOString(),
-    early_warning: { stage: 'early', due: at(t, 24), hours: 24, basis: 'aware_at', pending: false, what: 'Ennakkovaroitus ENISAlle ja koordinoivalle CSIRTille' },
-    detailed: { stage: 'detailed', due: at(t, 72), hours: 72, basis: 'aware_at', pending: false, what: 'Tarkempi arvio, korjaavat toimet' },
+    early_warning: { stage: 'early', due: at(t, 24), hours: 24, basis: 'aware_at', pending: false, what: 'Early warning to ENISA and the coordinating CSIRT' },
+    detailed: { stage: 'detailed', due: at(t, 72), hours: 72, basis: 'aware_at', pending: false, what: 'More detailed assessment, corrective measures' },
     final: r === null
       ? {
           stage: 'final', due: null, hours: 336, basis: 'remediation_available_at', pending: true,
           earliest_possible: at(t, 336),
-          what: 'Loppuraportti. Määräaika alkaa vasta kun korjaava toimi on saatavilla, joten sitä ei voi vielä laskea.',
+          what: 'Final report. The deadline starts only when a corrective measure is available, so it cannot be computed yet.',
         }
       : {
           stage: 'final', due: at(r, 336), hours: 336, basis: 'remediation_available_at', pending: false,
           earliest_possible: at(t, 336),
-          what: 'Loppuraportti korjaavan toimen tultua saataville',
+          what: 'Final report after a corrective measure became available',
         },
   };
 }
 
-/** Näytettävä määräaika, kun sitä ei välttämättä ole. Ei koskaan keksittyä päivää. */
+/** Displayable deadline when one may not exist. Never an invented date. */
 export function dueText(stageObj) {
   if (stageObj.due) return stageObj.due;
-  return `ei vielä laskettavissa (aikaisintaan ${stageObj.earliest_possible}, alkaa korjauksen saatavillaolosta)`;
+  return `not yet computable (earliest ${stageObj.earliest_possible}, starts when remediation is available)`;
 }
 
 function readLog() {
@@ -115,9 +115,9 @@ function readLog() {
 }
 
 /**
- * Kirjoita hash-ketjutettu rivi ja lue se takaisin. Jokainen rivi sitoutuu
- * edeltäjäänsä, joten yhden rivin muuttaminen jälkikäteen katkaisee ketjun ja
- * `verify` näkee sen. Tämä on se osa jota lomakkeen täyttö ei anna.
+ * Write a hash-chained row and read it back. Each row binds to its
+ * predecessor, so changing one line later breaks the chain and `verify`
+ * sees it. This is the part a form fill does not give you.
  */
 function appendChained(entry) {
   mkdirSync(path.dirname(LOG), { recursive: true });
@@ -128,7 +128,7 @@ function appendChained(entry) {
   const full = { ...body, entry_sha256 };
   appendFileSync(LOG, `${JSON.stringify(full)}\n`, 'utf8');
   const back = readLog().find((r) => r.entry_sha256 === entry_sha256);
-  if (!back) { console.error('🛑 cra-clock: rivi ei näy takaisinluvussa — älä väitä tätä kirjatuksi.'); process.exit(1); }
+  if (!back) { console.error('🛑 cra-clock: row did not round-trip — do not claim this was recorded.'); process.exit(1); }
   return full;
 }
 
@@ -136,10 +136,10 @@ export function verifyChain(rows) {
   const problems = [];
   let prev = ''.padEnd(64, '0');
   for (const [i, r] of rows.entries()) {
-    if (r.__broken) { problems.push(`rivi ${i + 1}: ei jäsenny JSONiksi`); continue; }
-    if (r.prev_sha256 !== prev) problems.push(`rivi ${i + 1}: prev_sha256 ei vastaa edellistä riviä`);
+    if (r.__broken) { problems.push(`row ${i + 1}: does not parse as JSON`); continue; }
+    if (r.prev_sha256 !== prev) problems.push(`row ${i + 1}: prev_sha256 does not match the previous row`);
     const { entry_sha256, ...body } = r;
-    if (sha256(JSON.stringify(body)) !== entry_sha256) problems.push(`rivi ${i + 1}: sisältö muuttunut kirjaamisen jälkeen`);
+    if (sha256(JSON.stringify(body)) !== entry_sha256) problems.push(`row ${i + 1}: content changed after recording`);
     prev = entry_sha256;
   }
   return { ok: problems.length === 0, problems, count: rows.length };
@@ -147,40 +147,40 @@ export function verifyChain(rows) {
 
 const STAGES = ['early', 'detailed', 'final'];
 
-/** Esitäytetty luonnos. Pakolliset kentät joita ostaja ei voi unohtaa. */
+/** Pre-filled draft. Mandatory fields the buyer cannot forget. */
 function draftFor(ev, stage) {
   const rem = remediationFor(ev.id);
   const d = deadlines(ev.aware_at, rem);
   const st = d[stage === 'early' ? 'early_warning' : stage];
   const lines = [
-    `CRA 14 art. — ${stage === 'early' ? 'ENNAKKOVAROITUS (24 h)' : stage === 'detailed' ? 'TARKEMPI ARVIO (72 h)' : 'LOPPURAPORTTI (14 vrk korjauksesta)'}`,
+    `CRA Article 14 — ${stage === 'early' ? 'EARLY WARNING (24 h)' : stage === 'detailed' ? 'DETAILED ASSESSMENT (72 h)' : 'FINAL REPORT (14 days from remediation)'}`,
     ``,
-    `Tuote: ${ev.product}`,
-    `Haavoittuvuus: ${ev.vuln}`,
-    `Tietoisuus alkoi: ${ev.aware_at}`,
-    `Määräaika: ${dueText(st)}`,
-    `Arvion teki: ${ev.decided_by}`,
-    `Lähde: ${ev.source}`,
+    `Product: ${ev.product}`,
+    `Vulnerability: ${ev.vuln}`,
+    `Awareness began: ${ev.aware_at}`,
+    `Deadline: ${dueText(st)}`,
+    `Assessment made by: ${ev.decided_by}`,
+    `Source: ${ev.source}`,
     ``,
-    `Aktiivisesti hyväksikäytetty: ${ev.actively_exploited ? 'KYLLÄ' : '<<TÄYTÄ: kyllä/ei ja perustelu>>'}`,
-    `Jäsenvaltiot joissa tuote on saatavilla: <<TÄYTÄ>>`,
+    `Actively exploited: ${ev.actively_exploited ? 'YES' : '<<FILL: yes/no and rationale>>'}`,
+    `Member States where the product is available: <<FILL>>`,
   ];
-  if (stage !== 'early') lines.push(`Korjaavat tai lieventävät toimet: <<TÄYTÄ>>`, `Vaikutusarvio: <<TÄYTÄ>>`);
+  if (stage !== 'early') lines.push(`Corrective or mitigating measures: <<FILL>>`, `Impact assessment: <<FILL>>`);
   if (stage === 'final') {
     lines.push(
       rem
-        ? `Korjaus saatavilla alkaen: ${rem}  (kirjattu todisteketjuun)`
-        : `Korjaus saatavilla alkaen: <<TÄYTÄ — kirjaa se komennolla: cra-clock.mjs remediation --id ${ev.id.slice(0, 8)} --at <ISO>>>`,
-      `Jakelutapa käyttäjille: <<TÄYTÄ>>`
+        ? `Remediation available from: ${rem}  (recorded in the evidence chain)`
+        : `Remediation available from: <<FILL — record it with: cra-clock.mjs remediation --id ${ev.id.slice(0, 8)} --at <ISO>>>`,
+      `Distribution method to users: <<FILL>>`
     );
   }
   lines.push(
     ``,
-    `Tapahtumatunnus: ${ev.id}`,
-    `Todisteketju: ${path.relative(process.cwd(), LOG)}`,
+    `Event id: ${ev.id}`,
+    `Evidence chain: ${path.relative(process.cwd(), LOG)}`,
     ``,
-    `Tämä on luonnos. Se ei ole oikeudellinen neuvo, eikä tämä työkalu lähetä`,
-    `mitään viranomaiselle. Lähetys tehdään ENISAn Single Reporting Platformilla.`
+    `This is a draft. It is not legal advice, and this tool does not send`,
+    `anything to an authority. Submission is done on ENISA's Single Reporting Platform.`
   );
   return lines.join('\n');
 }
@@ -188,7 +188,7 @@ function draftFor(ev, stage) {
 const events = () => readLog().filter((r) => r.type === 'aware');
 const findEvent = (id) => events().find((e) => e.id === id || e.id.startsWith(id));
 
-/** Viimeisin kirjattu korjauksen saatavillaolo, tai null. Tämä ratkaisee loppuraportin määräajan. */
+/** Latest recorded remediation-available moment, or null. This decides the final-report deadline. */
 function remediationFor(eventId) {
   const rows = readLog().filter((r) => r.type === 'remediation' && r.event_id === eventId);
   return rows.length ? rows[rows.length - 1].available_at : null;
@@ -198,13 +198,13 @@ function remediationFor(eventId) {
 
 if (cmd === 'deadlines') {
   const aware = flag('aware');
-  if (!aware) { console.error('Käyttö: deadlines --aware <ISO-aikaleima>'); process.exit(2); }
+  if (!aware) { console.error('Usage: deadlines --aware <ISO-timestamp>'); process.exit(2); }
   let d;
   try { d = deadlines(aware, flag('remediation')); } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
   if (argv.includes('--json')) { console.log(JSON.stringify(d, null, 2)); }
   else {
-    console.log(`Tietoisuus alkoi: ${d.aware_at}`);
-    if (d.remediation_available_at) console.log(`Korjaus saatavilla: ${d.remediation_available_at}`);
+    console.log(`Awareness began: ${d.aware_at}`);
+    if (d.remediation_available_at) console.log(`Remediation available: ${d.remediation_available_at}`);
     for (const k of ['early_warning', 'detailed', 'final']) {
       const s = d[k];
       console.log(`  ${String(s.hours).padStart(3)} h  ${dueText(s)}  ${s.what}`);
@@ -214,7 +214,7 @@ if (cmd === 'deadlines') {
   const product = flag('product'); const vuln = flag('vuln');
   const source = flag('source'); const decidedBy = flag('decided-by');
   if (!product || !vuln || !source || !decidedBy) {
-    console.error('Käyttö: aware --product <nimi> --vuln <tunnus> --source <url> --decided-by <nimi> [--aware <ISO>] [--actively-exploited]');
+    console.error('Usage: aware --product <name> --vuln <id> --source <url> --decided-by <name> [--aware <ISO>] [--actively-exploited]');
     process.exit(2);
   }
   const awareAt = flag('aware') ?? new Date().toISOString();
@@ -225,45 +225,45 @@ if (cmd === 'deadlines') {
     actively_exploited: argv.includes('--actively-exploited'),
   });
   const d = deadlines(ev.aware_at);
-  console.log(`KIRJATTU ${ev.id}`);
-  console.log(`  tietoisuus: ${ev.aware_at}   arvion teki: ${ev.decided_by}`);
+  console.log(`RECORDED ${ev.id}`);
+  console.log(`  awareness: ${ev.aware_at}   assessed by: ${ev.decided_by}`);
   for (const k of ['early_warning', 'detailed', 'final']) console.log(`  ${String(d[k].hours).padStart(3)} h  ${dueText(d[k])}`);
-  console.log(`  ketjun tiiviste: ${ev.entry_sha256.slice(0, 16)}…`);
+  console.log(`  chain digest: ${ev.entry_sha256.slice(0, 16)}…`);
 } else if (cmd === 'draft') {
   const id = flag('id'); const stage = flag('stage');
-  if (!id || !STAGES.includes(stage)) { console.error(`Käyttö: draft --id <id> --stage ${STAGES.join('|')}`); process.exit(2); }
+  if (!id || !STAGES.includes(stage)) { console.error(`Usage: draft --id <id> --stage ${STAGES.join('|')}`); process.exit(2); }
   const ev = findEvent(id);
-  if (!ev) { console.error(`🛑 tapahtumaa ei löydy: ${id}`); process.exit(2); }
+  if (!ev) { console.error(`🛑 event not found: ${id}`); process.exit(2); }
   console.log(draftFor(ev, stage));
 } else if (cmd === 'submitted') {
   const id = flag('id'); const stage = flag('stage'); const ref = flag('ref');
-  if (!id || !STAGES.includes(stage) || !ref) { console.error(`Käyttö: submitted --id <id> --stage ${STAGES.join('|')} --ref <SRP-viite>`); process.exit(2); }
+  if (!id || !STAGES.includes(stage) || !ref) { console.error(`Usage: submitted --id <id> --stage ${STAGES.join('|')} --ref <SRP-reference>`); process.exit(2); }
   const ev = findEvent(id);
-  if (!ev) { console.error(`🛑 tapahtumaa ei löydy: ${id}`); process.exit(2); }
-  // TASAN KERRAN. Tämä on koko tuotteen lupaus: sama vaihe ei kirjaudu kahdesti,
-  // vaikka komento ajettaisiin uudelleen tai skripti käynnistyisi kaatumisen
-  // jälkeen. Toinen yritys on virhe eikä hiljainen ohitus.
+  if (!ev) { console.error(`🛑 event not found: ${id}`); process.exit(2); }
+  // EXACTLY ONCE. This is the product promise: the same stage is not
+  // recorded twice, even if the command is re-run or the script restarts
+  // after a crash. A second attempt is an error, not a silent skip.
   const already = readLog().find((r) => r.type === 'submitted' && r.event_id === ev.id && r.stage === stage);
   if (already) {
-    console.error(`🛑 ESTETTY: ${stage} on jo merkitty lähetetyksi ${already.at} (viite ${already.ref}).`);
-    console.error('   Toinen ilmoitus samasta vaiheesta on juuri se mitä tämä työkalu estää.');
+    console.error(`🛑 BLOCKED: ${stage} already marked submitted at ${already.at} (ref ${already.ref}).`);
+    console.error('   A second notification for the same stage is exactly what this tool prevents.');
     process.exit(1);
   }
   const row = appendChained({ type: 'submitted', event_id: ev.id, stage, ref });
-  console.log(`LÄHETETTY MERKITTY ${stage} — ${ref}`);
-  console.log(`  ketjun tiiviste: ${row.entry_sha256.slice(0, 16)}…`);
+  console.log(`SUBMISSION MARKED ${stage} — ${ref}`);
+  console.log(`  chain digest: ${row.entry_sha256.slice(0, 16)}…`);
 } else if (cmd === 'remediation') {
-  // Loppuraportin määräaika alkaa tästä hetkestä, ei tietoisuudesta.
+  // The final-report deadline starts from this moment, not from awareness.
   const id = flag('id'); const at = flag('at');
-  if (!id || !at) { console.error('Käyttö: remediation --id <id> --at <ISO-aikaleima>'); process.exit(2); }
+  if (!id || !at) { console.error('Usage: remediation --id <id> --at <ISO-timestamp>'); process.exit(2); }
   const ev = findEvent(id);
-  if (!ev) { console.error(`🛑 tapahtumaa ei löydy: ${id}`); process.exit(2); }
+  if (!ev) { console.error(`🛑 event not found: ${id}`); process.exit(2); }
   let d;
   try { d = deadlines(ev.aware_at, at); } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
   const row = appendChained({ type: 'remediation', event_id: ev.id, available_at: d.remediation_available_at });
-  console.log(`KORJAUS SAATAVILLA KIRJATTU ${d.remediation_available_at}`);
-  console.log(`  loppuraportin määräaika: ${d.final.due}`);
-  console.log(`  ketjun tiiviste: ${row.entry_sha256.slice(0, 16)}…`);
+  console.log(`REMEDIATION AVAILABLE RECORDED ${d.remediation_available_at}`);
+  console.log(`  final-report deadline: ${d.final.due}`);
+  console.log(`  chain digest: ${row.entry_sha256.slice(0, 16)}…`);
 } else if (cmd === 'status') {
   const rows = readLog();
   const evs = events();
@@ -275,7 +275,7 @@ if (cmd === 'deadlines') {
       const key = s === 'early' ? 'early_warning' : s;
       const sub = rows.find((r) => r.type === 'submitted' && r.event_id === ev.id && r.stage === s);
       const st = d[key];
-      // Ilman määräaikaa ei ole myöhässäoloa. Tuntematon ei ole sama kuin myöhässä.
+      // Without a deadline there is no overdue. Unknown is not the same as late.
       if (st.due === null) {
         return { stage: s, due: null, pending: true, earliest_possible: st.earliest_possible, submitted: Boolean(sub), ref: sub?.ref ?? '', overdue: false, hours_left: null };
       }
@@ -285,57 +285,57 @@ if (cmd === 'deadlines') {
     return { id: ev.id, product: ev.product, vuln: ev.vuln, aware_at: ev.aware_at, remediation_available_at: rem, stages };
   });
   if (argv.includes('--json')) { console.log(JSON.stringify({ events: out, chain: verifyChain(rows) }, null, 2)); }
-  else if (!out.length) { console.log('Ei kirjattuja tapahtumia.'); }
+  else if (!out.length) { console.log('No recorded events.'); }
   else {
     for (const e of out) {
-      console.log(`${e.id.slice(0, 8)}  ${e.product} — ${e.vuln}   tietoisuus ${e.aware_at}`);
+      console.log(`${e.id.slice(0, 8)}  ${e.product} — ${e.vuln}   awareness ${e.aware_at}`);
       for (const s of e.stages) {
         const mark = s.submitted ? '✅' : s.overdue ? '🔴' : s.pending ? '⏳' : '·';
         const tail = s.submitted
-          ? `lähetetty (${s.ref})`
-          : s.overdue ? 'MYÖHÄSSÄ'
-          : s.pending ? 'odottaa korjauksen saatavillaoloa'
-          : `${s.hours_left} h jäljellä`;
-        const due = s.due ?? `aikaisintaan ${s.earliest_possible}`;
+          ? `submitted (${s.ref})`
+          : s.overdue ? 'OVERDUE'
+          : s.pending ? 'waiting for remediation to be available'
+          : `${s.hours_left} h remaining`;
+        const due = s.due ?? `earliest ${s.earliest_possible}`;
         console.log(`   ${mark} ${s.stage.padEnd(9)} ${due}  ${tail}`);
       }
     }
     const v = verifyChain(rows);
-    console.log(`\ntodisteketju: ${v.ok ? 'ehjä' : 'RIKKI'} (${v.count} riviä)`);
+    console.log(`\nevidence chain: ${v.ok ? 'intact' : 'BROKEN'} (${v.count} rows)`);
   }
 } else if (cmd === 'csaf') {
-  // CSAF 2.0 -neuvo kirjatusta tapahtumasta. Julkaisijaa ei keksitä: ilman
-  // nimeä ja namespacea tiedostoa ei synny.
+  // CSAF 2.0 advisory from a recorded event. Publisher is not invented:
+  // without a name and namespace, no file is produced.
   const id = flag('id');
   const name = flag('publisher');
   const ns = flag('namespace');
   if (!id || !name || !ns) {
-    console.error('Käyttö: csaf --id <id> --publisher "<nimi>" --namespace https://esimerkki.fi [--status draft|interim|final] [--version 1.0.0]');
+    console.error('Usage: csaf --id <id> --publisher "<name>" --namespace https://example.com [--status draft|interim|final] [--version 1.0.0]');
     process.exit(2);
   }
   const ev = findEvent(id);
-  if (!ev) { console.error(`🛑 tapahtumaa ei löydy: ${id}`); process.exit(2); }
+  if (!ev) { console.error(`🛑 event not found: ${id}`); process.exit(2); }
   let doc;
   try {
     doc = buildAdvisory({ event: ev, publisherName: name, publisherNamespace: ns, status: flag('status', 'draft'), version: flag('version', '1.0.0') });
   } catch (e) { console.error(`🛑 ${e.message}`); process.exit(2); }
   const v = validateAdvisory(doc);
   if (!v.ok) {
-    // Kelvoton CSAF on pahempi kuin puuttuva: se väittää olevansa neuvo.
-    console.error('🛑 tuotettu neuvo ei täytä CSAF 2.0 pakollisia kenttiä:');
+    // An invalid CSAF is worse than a missing one: it claims to be an advisory.
+    console.error('🛑 produced advisory does not meet CSAF 2.0 mandatory fields:');
     for (const e of v.errors) console.error(`   ✗ ${e}`);
     process.exit(1);
   }
   console.log(JSON.stringify(doc, null, 2));
 } else if (cmd === 'verify') {
   const v = verifyChain(readLog());
-  if (v.ok) { console.log(`✅ todisteketju ehjä — ${v.count} riviä`); }
+  if (v.ok) { console.log(`✅ evidence chain intact — ${v.count} rows`); }
   else {
-    console.log(`🛑 todisteketju RIKKI — ${v.problems.length} ongelmaa:`);
+    console.log(`🛑 evidence chain BROKEN — ${v.problems.length} problem(s):`);
     for (const p of v.problems) console.log(`  ✗ ${p}`);
     process.exit(1);
   }
 } else {
-  console.error('Komennot: deadlines | aware | draft | submitted | csaf | status | verify');
+  console.error('Commands: deadlines | aware | draft | submitted | csaf | status | verify');
   process.exit(2);
 }

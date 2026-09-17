@@ -2,48 +2,46 @@
 'use strict';
 
 /**
- * csaf.mjs — CSAF 2.0 -neuvon tuottaminen kirjatusta tapahtumasta.
+ * csaf.mjs — produce a CSAF 2.0 advisory from a recorded event.
  *
- * MIKSI: CSAF (Common Security Advisory Framework) on koneluettava muoto jolla
- * valmistaja julkaisee haavoittuvuusneuvon. Kilpailija myy "CSAF 2.0 advisory
- * export" osana 99 EUR/kk pakettia, ja se on aito pariteettivaatimus: ilman
- * sitä CRA-polku katkeaa siihen kohtaan jossa neuvo pitäisi julkaista.
+ * WHY: CSAF (Common Security Advisory Framework) is the machine-readable
+ * form in which a manufacturer publishes a vulnerability advisory.
  *
- * RAKENNE on verifioitu OASIS CSAF 2.0 -spesifikaatiosta, ei muistista:
- *   /document              5 pakollista: category, csaf_version, publisher,
+ * STRUCTURE verified from the OASIS CSAF 2.0 specification, not from memory:
+ *   /document              5 required: category, csaf_version, publisher,
  *                          title, tracking
- *   /document/tracking     6 pakollista: current_release_date, id,
+ *   /document/tracking     6 required: current_release_date, id,
  *                          initial_release_date, revision_history, status,
  *                          version
- *   revision_history       jokaisella: date, number, summary
- *   csaf_security_advisory -profiili vaatii lisäksi product_tree ja
+ *   revision_history       each: date, number, summary
+ *   csaf_security_advisory profile also requires product_tree and
  *                          vulnerabilities
  *
- * FAIL CLOSED: julkaisijan nimeä ja namespacea EI keksitä. Jos ne puuttuvat,
- * tiedostoa ei synny. Väärä namespace CSAF-neuvossa on pahempi kuin puuttuva
- * neuvo, koska se väittää alkuperää jota ei ole.
+ * FAIL CLOSED: publisher name and namespace are NOT invented. If they are
+ * missing, no file is produced. A wrong namespace on a CSAF advisory is
+ * worse than a missing advisory, because it claims an origin that is not there.
  *
- * Käyttö moduulina:  import { buildAdvisory, validateAdvisory } from './csaf.mjs'
+ * As a module:  import { buildAdvisory, validateAdvisory } from './csaf.mjs'
  */
 
-/** CSAF 2.0 pakolliset kentät, verifioitu spesifikaatiosta. */
+/** CSAF 2.0 required fields, verified against the specification. */
 export const REQUIRED_DOCUMENT = ['category', 'csaf_version', 'publisher', 'title', 'tracking'];
 export const REQUIRED_TRACKING = ['current_release_date', 'id', 'initial_release_date', 'revision_history', 'status', 'version'];
 const VALID_STATUS = ['draft', 'final', 'interim'];
 
 /**
- * Rakentaa csaf_security_advisory -profiilin mukaisen neuvon.
- * Kaikki aikaleimat tulevat kutsujalta: tämä funktio on puhdas, jotta sama
- * tapahtuma tuottaa aina saman neuvon eikä testi ole kellon armoilla.
+ * Builds an advisory matching the csaf_security_advisory profile.
+ * All timestamps come from the caller: this function is pure so the same
+ * event always produces the same advisory and tests are not clock-dependent.
  */
 export function buildAdvisory({ event, publisherName, publisherNamespace, status = 'draft', version = '1.0.0', releaseDate, revisionSummary = 'Initial version.' }) {
   const missing = [];
   if (!event) missing.push('event');
   if (!publisherName) missing.push('publisherName');
   if (!publisherNamespace) missing.push('publisherNamespace');
-  if (missing.length) throw new Error(`puuttuu: ${missing.join(', ')} — julkaisijaa ei keksitä`);
-  if (!VALID_STATUS.includes(status)) throw new Error(`tuntematon status: ${status}`);
-  if (!/^https?:\/\//.test(publisherNamespace)) throw new Error(`publisherNamespace on oltava URL: ${publisherNamespace}`);
+  if (missing.length) throw new Error(`missing: ${missing.join(', ')} — publisher is not invented`);
+  if (!VALID_STATUS.includes(status)) throw new Error(`unknown status: ${status}`);
+  if (!/^https?:\/\//.test(publisherNamespace)) throw new Error(`publisherNamespace must be a URL: ${publisherNamespace}`);
 
   const date = releaseDate ?? event.aware_at;
   const productId = `PROD-${(event.product ?? 'unknown').replace(/[^A-Za-z0-9]+/g, '-').toUpperCase()}`;
@@ -70,8 +68,8 @@ export function buildAdvisory({ event, publisherName, publisherNamespace, status
         {
           category: 'general',
           title: 'CRA Article 14 awareness',
-          // Tämä on se tieto jota kilpailijan vuo ei kanna neuvoon asti:
-          // milloin tietoisuus alkoi ja kuka arvion teki.
+          // The fact most reporting flows never carry into the advisory:
+          // when awareness began, and who made the call.
           text: `Awareness established ${event.aware_at} by ${event.decided_by}. Source: ${event.source}.`,
         },
       ],
@@ -89,30 +87,30 @@ export function buildAdvisory({ event, publisherName, publisherNamespace, status
   };
 }
 
-/** Tarkistaa pakolliset kentät. Palauttaa listan puutteista, ei heitä. */
+/** Checks required fields. Returns a list of gaps; does not throw. */
 export function validateAdvisory(doc) {
   const errors = [];
-  if (!doc || typeof doc !== 'object') return { ok: false, errors: ['ei ole olio'] };
+  if (!doc || typeof doc !== 'object') return { ok: false, errors: ['not an object'] };
   const d = doc.document;
-  if (!d) errors.push('/document puuttuu');
+  if (!d) errors.push('/document missing');
   else {
-    for (const k of REQUIRED_DOCUMENT) if (d[k] === undefined) errors.push(`/document/${k} puuttuu`);
-    if (d.csaf_version !== '2.0') errors.push(`/document/csaf_version on '${d.csaf_version}', odotettu '2.0'`);
+    for (const k of REQUIRED_DOCUMENT) if (d[k] === undefined) errors.push(`/document/${k} missing`);
+    if (d.csaf_version !== '2.0') errors.push(`/document/csaf_version is '${d.csaf_version}', expected '2.0'`);
     const p = d.publisher ?? {};
-    for (const k of ['category', 'name', 'namespace']) if (!p[k]) errors.push(`/document/publisher/${k} puuttuu`);
+    for (const k of ['category', 'name', 'namespace']) if (!p[k]) errors.push(`/document/publisher/${k} missing`);
     const t = d.tracking ?? {};
-    for (const k of REQUIRED_TRACKING) if (t[k] === undefined) errors.push(`/document/tracking/${k} puuttuu`);
+    for (const k of REQUIRED_TRACKING) if (t[k] === undefined) errors.push(`/document/tracking/${k} missing`);
     const rh = t.revision_history;
-    if (!Array.isArray(rh) || !rh.length) errors.push('/document/tracking/revision_history on tyhjä');
+    if (!Array.isArray(rh) || !rh.length) errors.push('/document/tracking/revision_history is empty');
     else for (const [i, r] of rh.entries()) {
-      for (const k of ['date', 'number', 'summary']) if (!r[k]) errors.push(`/document/tracking/revision_history[${i}]/${k} puuttuu`);
+      for (const k of ['date', 'number', 'summary']) if (!r[k]) errors.push(`/document/tracking/revision_history[${i}]/${k} missing`);
     }
-    if (t.status && !VALID_STATUS.includes(t.status)) errors.push(`/document/tracking/status on '${t.status}'`);
+    if (t.status && !VALID_STATUS.includes(t.status)) errors.push(`/document/tracking/status is '${t.status}'`);
   }
-  // csaf_security_advisory -profiili
+  // csaf_security_advisory profile
   if (doc.document?.category === 'csaf_security_advisory') {
-    if (!doc.product_tree) errors.push('/product_tree puuttuu (csaf_security_advisory vaatii)');
-    if (!Array.isArray(doc.vulnerabilities) || !doc.vulnerabilities.length) errors.push('/vulnerabilities puuttuu (csaf_security_advisory vaatii)');
+    if (!doc.product_tree) errors.push('/product_tree missing (required by csaf_security_advisory)');
+    if (!Array.isArray(doc.vulnerabilities) || !doc.vulnerabilities.length) errors.push('/vulnerabilities missing (required by csaf_security_advisory)');
   }
   return { ok: errors.length === 0, errors };
 }
