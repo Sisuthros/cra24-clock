@@ -1,6 +1,6 @@
 # CRA 24h Clock
 
-> A single-file, offline command-line tool that computes the EU Cyber Resilience Act
+> A small, offline command-line tool that computes the EU Cyber Resilience Act
 > Article 14 reporting deadlines from your moment of awareness, drafts the ENISA/CSIRT
 > notifications, and exports a CSAF 2.0 advisory. Runs entirely on your machine. No account,
 > no network, no data leaves your computer. MIT licensed.
@@ -58,7 +58,6 @@ answer is that it does not.
 - [Deadline tool](https://sisuthros.github.io/cra24-clock/tool.html): enter the moment of awareness, get the 24h/72h/14d deadlines
 - [Readiness assessment](https://sisuthros.github.io/cra24-clock/assess.html): questionnaire that scores whether you could actually meet a 24-hour deadline today
 - [CRA reporting in Finland](https://sisuthros.github.io/cra24-clock/cra-suomi.html): Traficom / NCSC-FI route, authorised-representative registration, ENISA SRP
-- [Incident intake](https://sisuthros.github.io/cra24-clock/intake.html): structured intake for recording an incident and its awareness timestamp
 
 ## Source and package
 
@@ -74,7 +73,7 @@ answer is that it does not.
 Incident timing data is among the most sensitive material a manufacturer holds: it establishes
 when the company knew, which is the fact that regulatory exposure turns on. This tool performs no
 network requests. Nothing is uploaded, and there is no service to trust. That is a deliberate
-design constraint, and it is checkable — the tool is a single readable file.
+design constraint, and it is checkable: the tool is two short readable files, `cra-clock.mjs` and `csaf.mjs`.
 
 ## Known limitation
 
@@ -82,6 +81,6 @@ ENISA's Single Reporting Platform is a manual web form with no public API. This 
 content of the notification and the evidence of timing; the submission itself is still a human
 step, and proving you submitted exactly once remains a manual problem.
 
-## Optional
+## Paid service
 
-- [Guidance and hands-on setup](https://sisuthros.github.io/cra24-clock/assess.html): for teams that want the readiness assessment reviewed and the reporting process put in place rather than only the calculator
+The paid setup service is paused. The tool is free and open source (MIT). Questions: https://github.com/Sisuthros/cra24-clock/issues

@@ -54,7 +54,7 @@ check('same input produces the same output', r.out === r2.out);
 check('invalid timestamp is rejected', run('deadlines', '--aware', 'yesterday').code === 2);
 
 // 2. Awareness is recorded and gets an id.
-r = run('aware', '--product', 'Acme FW', '--vuln', 'CVE-2026-1234', '--source', 'https://example.invalid/adv', '--decided-by', 'Ville', '--aware', '2026-09-11T08:00:00Z');
+r = run('aware', '--product', 'Acme FW', '--vuln', 'CVE-2026-1234', '--source', 'https://example.invalid/adv', '--decided-by', 'Alex', '--aware', '2026-09-11T08:00:00Z');
 const id = (/RECORDED (\S+)/.exec(r.out) ?? [])[1];
 check('awareness is recorded', r.code === 0 && Boolean(id), r.out.slice(0, 120));
 check('log has an aware row', log().filter((x) => x.type === 'aware').length === 1);
@@ -99,7 +99,7 @@ check('submitted stage is marked', ev.stages.find((s) => s.stage === 'early').su
 check('a future deadline is not overdue', ev.stages.find((s) => s.stage === 'final').overdue === false);
 check('status reports the chain as intact', st.chain.ok === true);
 
-r = run('aware', '--product', 'Legacy', '--vuln', 'CVE-2020-0001', '--source', 'https://example.invalid/old', '--decided-by', 'Ville', '--aware', '2020-01-01T00:00:00Z');
+r = run('aware', '--product', 'Legacy', '--vuln', 'CVE-2020-0001', '--source', 'https://example.invalid/old', '--decided-by', 'Alex', '--aware', '2020-01-01T00:00:00Z');
 const oldId = (/RECORDED (\S+)/.exec(r.out) ?? [])[1];
 const st2 = JSON.parse(run('status', '--json').out);
 const oldEv = st2.events.find((e) => e.id === oldId);
@@ -124,13 +124,13 @@ check('profile requires product_tree', Boolean(adv.product_tree));
 check('profile requires vulnerabilities', Array.isArray(adv.vulnerabilities) && adv.vulnerabilities.length > 0);
 check('CVE id goes into the cve field', adv.vulnerabilities[0].cve === 'CVE-2026-1234', JSON.stringify(adv.vulnerabilities[0]).slice(0, 120));
 check('advisory carries the awareness moment', JSON.stringify(adv).includes('2026-09-11T08:00:00.000Z'));
-check('advisory names who made the assessment', JSON.stringify(adv).includes('Ville'));
+check('advisory names who made the assessment', JSON.stringify(adv).includes('Alex'));
 
 check('no advisory without a namespace', run('csaf', '--id', id, '--publisher', 'Acme Ltd').code === 2);
 r = run('csaf', '--id', id, '--publisher', 'Acme Ltd', '--namespace', 'acme.example');
 check('namespace must be a URL', r.code === 2 && /URL/.test(r.out), r.out.slice(0, 120));
 
-r = run('aware', '--product', 'Acme', '--vuln', 'ACME-2026-9', '--source', 'https://example.invalid/x', '--decided-by', 'Ville', '--aware', '2026-09-11T08:00:00Z');
+r = run('aware', '--product', 'Acme', '--vuln', 'ACME-2026-9', '--source', 'https://example.invalid/x', '--decided-by', 'Alex', '--aware', '2026-09-11T08:00:00Z');
 const vid = (/RECORDED (\S+)/.exec(r.out) ?? [])[1];
 const adv2 = JSON.parse(run('csaf', '--id', vid, '--publisher', 'Acme Ltd', '--namespace', 'https://acme.example').out);
 check('vendor id goes into the ids field', adv2.vulnerabilities[0].cve === undefined && Array.isArray(adv2.vulnerabilities[0].ids), JSON.stringify(adv2.vulnerabilities[0]).slice(0, 140));
